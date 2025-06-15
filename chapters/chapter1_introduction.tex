@@ -1,0 +1,97 @@
+% Chapter 1: Introduction
+\chapter{Introduction}
+
+\section{General Context}
+
+The financial markets operate in an increasingly complex and volatile environment where price movements can occur within microseconds. The importance of real-time financial surveillance has grown exponentially with the rise of algorithmic trading, high-frequency trading, and the democratization of financial markets through retail trading platforms.
+
+Modern financial institutions and regulatory bodies require sophisticated systems capable of monitoring thousands of financial instruments simultaneously, detecting anomalous price movements, and generating alerts in real-time. These systems must process massive volumes of data while maintaining low latency and high accuracy to prevent market manipulation, detect insider trading, and ensure market integrity.
+
+The evolution of data processing technologies, particularly in the areas of stream processing, distributed computing, and machine learning, has opened new possibilities for creating more efficient and accurate surveillance systems. Technologies such as Apache Kafka for real-time data streaming, Elasticsearch for fast search and analytics, and modern frameworks like FastAPI for building high-performance APIs have revolutionized how financial data can be processed and analyzed.
+
+\section{Problem Statement}
+
+Financial markets generate enormous amounts of data every second, with price updates, trading volumes, and market events occurring continuously across multiple exchanges and trading venues. Traditional surveillance systems often struggle with several key challenges:
+% \include{chapters/cover.tex}
+\begin{itemize}
+    \item \textbf{Real-time Processing}: The need to process and analyze financial data in real-time to detect anomalies as they occur, rather than discovering them hours or days later.
+    
+    \item \textbf{Scalability}: The ability to handle increasing volumes of data as more financial instruments are monitored and as market activity grows.
+    
+    \item \textbf{Accuracy}: Minimizing false positives while ensuring that genuine anomalies are detected promptly and reliably.
+    
+    \item \textbf{Historical Analysis}: Maintaining comprehensive historical records for post-mortem analysis, regulatory compliance, and pattern recognition.
+    
+    \item \textbf{Alert Management}: Providing timely and actionable alerts to the appropriate stakeholders when anomalies are detected.
+\end{itemize}
+
+The challenge lies in building a system that can address all these requirements simultaneously while remaining cost-effective and maintainable.
+
+\section{Project Objectives}
+
+\subsection{Main Objective}
+
+The primary objective of this project is to develop a comprehensive real-time financial data surveillance system capable of detecting price anomalies as they occur and providing immediate alerts to relevant stakeholders.
+
+\subsection{Secondary Objectives}
+
+\begin{enumerate}
+    \item \textbf{Implement Statistical Anomaly Detection}: Develop and implement robust statistical algorithms, particularly Z-score analysis, to identify price movements that deviate significantly from historical patterns.
+    
+    \item \textbf{Create an Automated Alert System}: Build a multi-channel alert system that can notify users through various means (email, SMS, dashboard notifications) when anomalies are detected.
+    
+    \item \textbf{Provide Analytical Reports}: Generate comprehensive reports in multiple formats (PDF, CSV) that summarize detected anomalies and provide insights for further analysis.
+    
+    \item \textbf{Ensure System Scalability}: Design the system architecture to handle increasing loads and support monitoring of additional financial instruments without significant performance degradation.
+    
+    \item \textbf{Maintain Data Integrity}: Implement robust data storage and retrieval mechanisms to ensure that all financial data and detected anomalies are preserved for historical analysis and regulatory compliance.
+\end{enumerate}
+
+\section{Adopted Methodology}
+
+The development of this financial surveillance system follows a structured approach that emphasizes iterative development, open-source technologies, and comprehensive testing:
+
+\subsection{Agile Development Approach}
+
+The project adopts an agile methodology with short development cycles, allowing for rapid prototyping and continuous improvement. This approach enables quick adaptation to changing requirements and facilitates early detection of potential issues.
+
+\subsection{Open-Source Technology Preference}
+
+Priority is given to open-source technologies to ensure cost-effectiveness, community support, and avoid vendor lock-in. The selected technology stack includes:
+\begin{itemize}
+    \item Apache Kafka for real-time data streaming
+    \item Elasticsearch for data storage and search
+    \item FastAPI for RESTful API development
+    \item Redis for caching and temporary data storage
+    \item Celery for asynchronous task processing
+\end{itemize}
+
+\subsection{Data-Driven Testing Strategy}
+
+The system is tested using both simulated and real financial data to ensure robustness and accuracy. Initial testing uses controlled, simulated datasets to validate core functionality, followed by testing with real market data to verify performance under actual conditions.
+
+\subsection{Microservices Architecture}
+
+The system is designed using a microservices architecture to ensure modularity, scalability, and maintainability. Each component has a specific responsibility and can be developed, tested, and deployed independently.
+
+\section{Report Structure}
+
+This report is organized into eight main chapters, each focusing on a specific aspect of the project:
+
+\begin{itemize}
+    \item \textbf{Chapter 2} presents a comprehensive analysis of existing solutions and technologies in the financial surveillance domain, establishing the theoretical foundation for the project.
+    
+    \item \textbf{Chapter 3} details the system design and architecture, explaining the rationale behind technology choices and architectural decisions.
+    
+    \item \textbf{Chapter 4} describes the implementation process, including key modules, coding practices, and technical challenges encountered during development.
+    
+    \item \textbf{Chapter 5} covers the testing and validation methodology, presenting results and performance metrics that demonstrate the system's effectiveness.
+    
+    \item \textbf{Chapter 6} explains the deployment strategy and operational considerations for running the system in production environments.
+    
+    \item \textbf{Chapter 7} provides a critical analysis of the results, discussing limitations, challenges, and future improvement opportunities.
+    
+    \item \textbf{Chapter 8} concludes the report with a summary of achievements, lessons learned, and perspectives for future development.
+\end{itemize}
+
+The appendices provide additional technical details, including source code excerpts, detailed test results, user guides, and comprehensive bibliography.

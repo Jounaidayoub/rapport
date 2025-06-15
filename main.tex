@@ -1,0 +1,103 @@
+\documentclass[12pt,a4paper]{report}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french,english]{babel}
+\usepackage{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{acronym}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{minted}
+\usepackage{appendix}
+
+% Page geometry
+\geometry{
+    left=2.5cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+% Line spacing
+\usepackage{setspace}
+\onehalfspacing
+
+% Headers and footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=red,
+    pdftitle={Financial Data Surveillance System - Internship Report},
+    pdfauthor={[Your Name]},
+    pdfsubject={Internship Report},
+    pdfkeywords={Financial Data, Real-time Processing, Anomaly Detection}
+}
+
+% Code listing setup
+\lstset{
+    backgroundcolor=\color{gray!10},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{green!60!black},
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    frame=single,
+    rulecolor=\color{black!30},
+    showstringspaces=false,
+    tabsize=2
+}
+
+% Python syntax highlighting
+\lstdefinestyle{python}{
+    language=Python,
+    morekeywords={self,def,class,if,else,elif,while,for,in,return,import,from,as,try,except,finally,with,yield,lambda}
+}
+
+% Custom commands
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\texttt{#1}}
+\newcommand{\keyword}[1]{\textbf{#1}}
+
+\begin{document}
+
+% Include all chapters
+% \input{chapters/cover}
+\input{chapters/table_of_contents}
+\input{chapters/chapter1_introduction}
+\input{chapters/chapter3_design_architecture}
+\input{chapters/chapter4_implementation}
+\input{chapters/chapter5_testing_validation}
+\input{chapters/chapter6_deployment_operations}
+\input{chapters/chapter7_critical_analysis}
+\input{chapters/chapter8_conclusion}
+\input{chapters/appendices}
+
+\end{document}

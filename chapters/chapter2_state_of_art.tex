@@ -1,0 +1,421 @@
+% Chapter 2: State of the Art and Needs Analysis
+\chapter{State of the Art and Needs Analysis}
+
+\section{Study of Existing Solutions}
+
+\subsection{Commercial Solutions}
+
+The financial surveillance market is dominated by several established commercial platforms, each offering comprehensive solutions for market monitoring and anomaly detection.
+
+\subsubsection{Bloomberg Terminal}
+
+Bloomberg Terminal remains the gold standard for financial data and analytics, offering:
+\begin{itemize}
+    \item Real-time market data from over 350 exchanges
+    \item Advanced charting and technical analysis tools
+    \item News integration and market alerts
+    \item Customizable dashboards and workspaces
+\end{itemize}
+
+\textbf{Strengths:}
+\begin{itemize}
+    \item Comprehensive data coverage
+    \item Proven reliability and performance
+    \item Extensive analytical capabilities
+    \item Strong community and support
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item High cost (\$24,000+ per user per year)
+    \item Proprietary system with limited customization
+    \item Steep learning curve
+    \item Vendor lock-in
+\end{itemize}
+
+\subsubsection{Refinitiv Eikon (formerly Thomson Reuters)}
+
+Refinitiv Eikon provides institutional-grade financial data and analytics:
+\begin{itemize}
+    \item Real-time and historical market data
+    \item Risk management tools
+    \item News and research integration
+    \item Workflow automation capabilities
+\end{itemize}
+
+\textbf{Strengths:}
+\begin{itemize}
+    \item Strong data quality and coverage
+    \item Integrated news and research
+    \item Advanced risk analytics
+    \item API access for custom development
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item Expensive licensing model
+    \item Complex setup and configuration
+    \item Limited customization options
+    \item Resource-intensive client application
+\end{itemize}
+
+\subsubsection{TradingView}
+
+TradingView has emerged as a popular platform for both retail and institutional users:
+\begin{itemize}
+    \item Web-based charting platform
+    \item Social trading features
+    \item Custom indicator development
+    \item Alert system
+\end{itemize}
+
+\textbf{Strengths:}
+\begin{itemize}
+    \item User-friendly interface
+    \item Affordable pricing tiers
+    \item Strong community and social features
+    \item Cross-platform availability
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item Limited institutional features
+    \item Basic anomaly detection capabilities
+    \item Dependence on third-party data feeds
+    \item Limited customization for enterprise use
+\end{itemize}
+
+\subsection{Open Source Solutions}
+
+\subsubsection{Apache Kafka for Data Streaming}
+
+Apache Kafka has become the de facto standard for real-time data streaming in financial applications:
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item High throughput and low latency
+    \item Horizontal scalability
+    \item Fault tolerance and data durability
+    \item Strong ecosystem and community support
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item Complex configuration and tuning
+    \item Operational overhead
+    \item Learning curve for developers
+    \item Requires careful capacity planning
+\end{itemize}
+
+\subsubsection{Elasticsearch for Data Storage and Search}
+
+Elasticsearch provides powerful search and analytics capabilities:
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Near real-time search capabilities
+    \item Scalable distributed architecture
+    \item Rich query language
+    \item Excellent performance for time-series data
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item Memory-intensive operations
+    \item Complex cluster management
+    \item Licensing changes (Elastic License)
+    \item Requires expertise for optimization
+\end{itemize}
+
+\subsubsection{Grafana for Data Visualization}
+
+Grafana offers comprehensive dashboarding and visualization:
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Rich visualization options
+    \item Multi-datasource support
+    \item Alert management
+    \item Open-source with commercial support
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item Limited real-time capabilities
+    \item Requires separate data sources
+    \item Configuration complexity
+    \item Performance issues with large datasets
+\end{itemize}
+
+\section{Anomaly Detection Technologies}
+
+\subsection{Statistical Approaches}
+
+Statistical methods form the foundation of most anomaly detection systems in financial markets:
+
+\subsubsection{Z-Score Analysis}
+
+The Z-score method measures how many standard deviations a data point is from the mean:
+
+\begin{equation}
+Z = \frac{x - \mu}{\sigma}
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item $x$ is the observed value
+    \item $\mu$ is the mean of the dataset
+    \item $\sigma$ is the standard deviation
+\end{itemize}
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Simple to implement and understand
+    \item Computationally efficient
+    \item Suitable for real-time processing
+    \item Well-established statistical foundation
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item Assumes normal distribution
+    \item Sensitive to outliers in training data
+    \item May not capture complex patterns
+    \item Fixed threshold approach
+\end{itemize}
+
+\subsubsection{Moving Averages and Standard Deviation}
+
+Moving averages provide a smoothed view of price trends and help identify deviations:
+
+\begin{equation}
+MA_n = \frac{1}{n}\sum_{i=0}^{n-1} P_{t-i}
+\end{equation}
+
+\subsection{Machine Learning Approaches}
+
+\subsubsection{Isolation Forests}
+
+Isolation forests detect anomalies by isolating data points in a tree structure:
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item No assumption about data distribution
+    \item Effective for high-dimensional data
+    \item Low computational complexity
+    \item Unsupervised learning approach
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item May struggle with certain data patterns
+    \item Requires parameter tuning
+    \item Less interpretable than statistical methods
+    \item Training data requirements
+\end{itemize}
+
+\subsubsection{Autoencoders}
+
+Neural network-based autoencoders can learn complex patterns in financial data:
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Can capture non-linear relationships
+    \item Adaptable to different data types
+    \item Potential for high accuracy
+    \item Flexible architecture
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item Requires significant computational resources
+    \item Training complexity and time
+    \item Black box nature
+    \item Requires large datasets
+\end{itemize}
+
+\subsection{Business Rules-Based Detection}
+
+\subsubsection{Fixed Thresholds}
+
+Simple threshold-based rules for price movements:
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Easy to implement and understand
+    \item Transparent and explainable
+    \item Fast processing
+    \item Regulatory compliance friendly
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item Static nature may miss context
+    \item High false positive rates
+    \item Requires manual threshold setting
+    \item Limited adaptability
+\end{itemize}
+
+\subsection{Choice Justification: Z-Score Method}
+
+For this project, the Z-score statistical method was selected based on the following considerations:
+
+\begin{enumerate}
+    \item \textbf{Real-time Performance}: Z-score calculation is computationally efficient and suitable for real-time processing requirements.
+    
+    \item \textbf{Interpretability}: The results are easily interpretable by financial analysts and regulatory personnel.
+    
+    \item \textbf{Implementation Simplicity}: The method is straightforward to implement and debug, reducing development time and complexity.
+    
+    \item \textbf{Proven Effectiveness}: Z-score analysis has a long history of successful application in financial anomaly detection.
+    
+    \item \textbf{Configurable Sensitivity}: The threshold for anomaly detection can be easily adjusted based on market conditions and user requirements.
+\end{enumerate}
+
+\section{Trading System Architecture}
+
+\subsection{Typical Components}
+
+Modern trading surveillance systems typically consist of several key components:
+
+\subsubsection{Data Collection Layer}
+\begin{itemize}
+    \item Market data feeds from exchanges
+    \item Data normalization and validation
+    \item Protocol handling (FIX, binary formats)
+    \item Rate limiting and throttling
+\end{itemize}
+
+\subsubsection{Processing Layer}
+\begin{itemize}
+    \item Real-time stream processing
+    \item Complex event processing
+    \item Pattern recognition engines
+    \item Risk calculation modules
+\end{itemize}
+
+\subsubsection{Storage Layer}
+\begin{itemize}
+    \item Time-series databases
+    \item Historical data archives
+    \item Metadata repositories
+    \item Backup and recovery systems
+\end{itemize}
+
+\subsubsection{Alert and Reporting Layer}
+\begin{itemize}
+    \item Alert generation and routing
+    \item Report generation engines
+    \item Notification systems
+    \item Audit trail maintenance
+\end{itemize}
+
+\subsection{Performance Requirements}
+
+Financial surveillance systems must meet stringent performance requirements:
+
+\begin{table}[H]
+\centering
+\caption{Performance Requirements for Financial Surveillance Systems}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Metric} & \textbf{Requirement} & \textbf{Justification} \\
+\midrule
+Latency & < 100ms & Real-time anomaly detection \\
+Throughput & 10,000+ msg/sec & High-frequency trading data \\
+Availability & 99.9\% & Continuous market monitoring \\
+Recovery Time & < 30 seconds & Minimize monitoring gaps \\
+Data Retention & 7+ years & Regulatory compliance \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Regulatory Constraints}
+
+Financial surveillance systems must comply with various regulatory requirements:
+
+\begin{itemize}
+    \item \textbf{Audit Trail}: Complete record of all data processing and decisions
+    \item \textbf{Data Integrity}: Ensuring data accuracy and preventing tampering
+    \item \textbf{Retention Policies}: Long-term storage of surveillance data
+    \item \textbf{Access Controls}: Restricted access to sensitive financial data
+    \item \textbf{Reporting Standards}: Standardized formats for regulatory reporting
+\end{itemize}
+
+\section{Functional Requirements Specification}
+
+\subsection{Functional Requirements}
+
+\subsubsection{Real-time Data Collection}
+\begin{itemize}
+    \item Ability to ingest financial data from multiple sources
+    \item Support for various data formats (JSON, CSV, binary)
+    \item Configurable data validation rules
+    \item Error handling and data quality monitoring
+\end{itemize}
+
+\subsubsection{Configurable Anomaly Detection}
+\begin{itemize}
+    \item Multiple detection algorithms (Z-score, threshold-based)
+    \item Configurable sensitivity parameters
+    \item Support for different asset classes
+    \item Ability to enable/disable detection for specific instruments
+\end{itemize}
+
+\subsubsection{Multi-channel Alert System}
+\begin{itemize}
+    \item Real-time alert generation
+    \item Multiple notification channels (email, SMS, dashboard)
+    \item Alert prioritization and escalation
+    \item Alert acknowledgment and tracking
+\end{itemize}
+
+\subsubsection{Historical Data Interface}
+\begin{itemize}
+    \item Query historical anomalies by date range
+    \item Search functionality for specific instruments
+    \item Export capabilities (CSV, PDF)
+    \item Data visualization and charting
+\end{itemize}
+
+\subsubsection{Automated Report Generation}
+\begin{itemize}
+    \item Scheduled report generation
+    \item Multiple output formats (PDF, CSV, Excel)
+    \item Customizable report templates
+    \item Email distribution of reports
+\end{itemize}
+
+\subsection{Non-Functional Requirements}
+
+\subsubsection{Performance}
+\begin{itemize}
+    \item \textbf{Latency}: Alert generation within 100ms of anomaly detection
+    \item \textbf{Throughput}: Process 10,000+ price updates per second
+    \item \textbf{Scalability}: Linear scaling with additional computing resources
+    \item \textbf{Resource Utilization}: Efficient use of CPU and memory
+\end{itemize}
+
+\subsubsection{Availability and Reliability}
+\begin{itemize}
+    \item \textbf{Uptime}: 99.9\% system availability
+    \item \textbf{Recovery**: Automatic recovery from component failures
+    \item \textbf{Data Durability}: No data loss during system failures
+    \item \textbf{Backup**: Regular automated backups
+\end{itemize}
+
+\subsubsection{Scalability}
+\begin{itemize}
+    \item \textbf{Horizontal Scaling**: Support for 1000+ financial instruments
+    \item \textbf{Geographic Distribution}: Multi-region deployment capability
+    \item \textbf{Load Balancing**: Automatic load distribution
+    \item \textbf{Resource Elasticity**: Dynamic resource allocation
+\end{itemize}
+
+\subsubsection{Security}
+\begin{itemize}
+    \item \textbf{Authentication**: User authentication and authorization
+    \item \textbf{Data Encryption}: Encryption at rest and in transit
+    \item \textbf{Audit Logging**: Comprehensive audit trail
+    \item \textbf{Access Control**: Role-based access control
+\end{itemize}

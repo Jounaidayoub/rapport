@@ -1,0 +1,171 @@
+\appendix
+\chapter{Appendices}
+
+\section{Code Snippets}
+
+\subsection{Full Implementation Examples}
+
+This appendix contains the full code implementations of key components that were simplified in the main report.
+
+\subsubsection{Data Generator Complete Implementation}
+The complete implementation of the data generator module, including simulation logic and Kafka producer integration, is available in the project's GitHub repository.
+
+\subsubsection{Docker Compose Configuration}
+\begin{minted}[fontsize=\footnotesize, frame=lines, label=Docker Compose Configuration]{yaml}
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # Kafka and Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 24
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  # Redis (for Celery broker and sliding window)
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+
+  # FastAPI application
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: financial-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - kafka
+      - redis
+      - elasticsearch
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - REDIS_HOST=redis
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    volumes:
+      - ./api:/app
+
+  # Celery workers
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    depends_on:
+      - kafka
+      - redis
+      - elasticsearch
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - REDIS_HOST=redis
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    volumes:
+      - ./worker:/app
+
+  # Data generator
+  data-generator:
+    build:
+      context: ./data_generator
+      dockerfile: Dockerfile
+    container_name: data-generator
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+    volumes:
+      - ./data_generator:/app
+
+volumes:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
+  redis-data:
+  es-data:
+\end{minted}
+
+\section{Project Structure}
+\begin{minted}[fontsize=\footnotesize, frame=lines, label=Project Structure]{text}
+financial-data-surveillance-system/
+|-- api/
+|   |-- app/
+|   |   |-- __init__.py
+|   |   |-- main.py              # FastAPI application
+|   |   |-- routes/              # API routes
+|   |   |-- models/              # Pydantic models
+|   |   |-- services/            # Business logic
+|   |   `-- utils/               # Utility functions
+|   |-- Dockerfile
+|   `-- requirements.txt
+|
+|-- data_generator/
+|   |-- generator.py             # Stock price simulator
+|   |-- Dockerfile
+|   `-- requirements.txt
+|
+|-- worker/
+|   |-- tasks.py                 # Celery tasks
+|   |-- anomaly_detection.py     # Anomaly detection algorithms
+|   |-- Dockerfile
+|   `-- requirements.txt
+|
+|-- docker-compose.yml           # Docker Compose configuration
+|
+|-- docs/
+|   `-- api.yaml                 # OpenAPI specification
+|
+`-- README.md
+\end{minted}
+
+\section{Detailed Configuration Files}
+
+\subsection{Celery Configuration}
+The detailed Celery configuration, including broker and backend settings, task serialization, and Redis/Elasticsearch client initialization, is available in the project's source code.

@@ -1,0 +1,422 @@
+% Chapter 3: Design and Architecture
+\chapter{Design and Architecture}
+
+\section{Global System Architecture}
+
+\subsection{Overview}
+
+The financial data surveillance system is designed as a distributed, event-driven architecture composed of several interconnected microservices. This architecture ensures scalability, resilience, and maintainability, which are critical for real-time financial applications.
+
+\begin{figure}[H]
+    \centering
+    % Placeholder for the general architecture diagram
+    \includegraphics[width=\textwidth]{figures/global.png}
+    % \fbox{\parbox[c][10cm][c]{\textwidth}{\centering Placeholder for General Architecture Diagram (e.g., using TikZ or an imported image)}}
+    % \caption{General System Architecture}
+    % \label{fig:general_architecture}
+\end{figure}
+
+\textbf{Main Data Flow:}
+\begin{enumerate}
+    \item \textbf{Data Ingestion}: Simulated financial data (e.g., TSLA stock prices) is generated and published to an Apache Kafka topic.
+    \item \textbf{Real-time Processing}: Kafka consumers read data streams, and Celery workers process these messages asynchronously to detect anomalies using the Z-score algorithm. Redis is used for storing sliding windows of recent data for calculations.
+    \item \textbf{Anomaly Storage}: Detected anomalies are indexed and stored in Elasticsearch for historical analysis and querying.
+    \item \textbf{API and Reporting}: A FastAPI application provides RESTful endpoints for querying anomalies, generating reports (PDF, CSV), and managing alerts. Alerts are also published to separate Kafka topics for consumption by notification services.
+\end{enumerate}
+
+\textbf{Components and Their Interactions:}
+\begin{itemize}
+    \item \textbf{Data Generator}: Produces simulated stock price data.
+    \item \textbf{Kafka Cluster}: Acts as the central message bus for data streams and alerts.
+    \item \textbf{Celery Workers}: Perform asynchronous anomaly detection tasks.
+    \item \textbf{Redis}: Provides fast, in-memory storage for sliding windows.
+    \item \textbf{Elasticsearch Cluster}: Stores and indexes detected anomalies for long-term analysis.
+    \item \textbf{FastAPI Application}: Exposes system functionalities through a REST API.
+    \item \textbf{Reporting Module}: Generates analytical reports.
+    \item \textbf{Alerting System}: Manages and dispatches alerts.
+\end{itemize}
+
+\subsection{Architectural Pattern}
+
+\subsubsection{Microservices Architecture}
+
+The choice of a microservices architecture is justified by:
+\begin{itemize}
+    \item \textbf{Scalability}: Individual services can be scaled independently based on demand (e.g., scaling Celery workers during high data load).
+    \item \textbf{Resilience}: Failure in one service does not necessarily bring down the entire system. For instance, if the reporting service fails, data ingestion and anomaly detection can continue.
+    \item \textbf{Technology Diversity}: Different services can be implemented using the most suitable technology stack for their specific tasks.
+    \item \textbf{Maintainability}: Smaller, focused services are easier to understand, develop, test, and maintain.
+    \item \textbf{Independent Deployability}: Services can be deployed and updated independently, allowing for faster release cycles.
+\end{itemize}
+
+\subsubsection{Event-Driven Architecture (EDA)}
+
+An event-driven architecture, primarily facilitated by Apache Kafka, offers several advantages:
+\begin{itemize}
+    \item \textbf{Decoupling}: Producers and consumers of data are decoupled. The data generator does not need to know about the anomaly detection workers, and vice-versa.
+    \item \textbf{Asynchronous Processing}: Tasks like anomaly detection can be performed asynchronously, improving system responsiveness and throughput.
+    \item \textbf{Scalability and Resilience}: Kafka itself is highly scalable and fault-tolerant, contributing to the overall system's robustness.
+    \item \textbf{Real-time Capabilities}: EDA is well-suited for real-time applications where immediate response to events (like new price data) is crucial.
+\end{itemize}
+
+\subsubsection{Separation of Concerns}
+
+Each layer and component in the architecture has a distinct responsibility:
+\begin{itemize}
+    \item \textbf{Data Collection Layer}: Focuses solely on ingesting and formatting raw data.
+    \item \textbf{Processing Layer}: Handles the core logic of anomaly detection.
+    \item \textbf{Storage Layer}: Manages persistent storage and indexing of anomalies.
+    \item \textbf{API and Reporting Layer}: Provides interfaces for user interaction and data retrieval.
+\end{itemize}
+This separation simplifies development, testing, and maintenance.
+
+\section{Technology Overview and Selection Rationale}
+
+The implementation of this system relies on several key technologies, each chosen for specific capabilities they bring to the architecture. This section provides a focused explanation of each core technology and its role in the system.
+
+\subsection{Apache Kafka}
+
+\subsubsection{Overview}
+Apache Kafka is a distributed event streaming platform used in our architecture for real-time data ingestion and message propagation. It provides a highly reliable, scalable system for publishing and subscribing to streams of records.
+
+\subsubsection{Core Features}
+\begin{itemize}
+    \item \textbf{Distributed Architecture}: Kafka operates as a cluster of broker nodes, providing fault tolerance and load distribution.
+    \item \textbf{Topic-Based Messaging}: Data streams are organized into topics that can be partitioned for parallel processing.
+    \item \textbf{High Throughput}: Capable of handling millions of messages per second with minimal latency.
+    \item \textbf{Persistent Storage}: Messages are persisted to disk with configurable retention periods.
+    \item \textbf{Replication}: Data is replicated across multiple nodes to prevent data loss.
+\end{itemize}
+
+\subsubsection{Role in Our System}
+In our financial surveillance system, Kafka serves as:
+\begin{itemize}
+    \item The central data highway for stock price data streams
+    \item A buffer system that decouples data producers from consumers
+    \item A scalable mechanism for distributing data to multiple processing workers
+    \item An event bus for propagating detected anomalies to notification services
+\end{itemize}
+
+\subsection{Redis}
+
+\subsubsection{Overview}
+Redis is an in-memory data structure store that we use both as a message broker for Celery and for maintaining sliding windows of recent stock data.
+
+\subsubsection{Core Features}
+\begin{itemize}
+    \item \textbf{In-Memory Operation}: Extremely fast read/write operations with sub-millisecond latency.
+    \item \textbf{Data Structures}: Supports various data structures like strings, hashes, lists, sets, and sorted sets.
+    \item \textbf{Optional Persistence}: Can persist data to disk through snapshotting or append-only files.
+    \item \textbf{Atomic Operations}: Supports transactions and Lua scripting for complex operations.
+    \item \textbf{Pub/Sub Capabilities}: Native support for publish/subscribe messaging patterns.
+\end{itemize}
+
+\subsubsection{Role in Our System}
+Redis performs two critical functions:
+\begin{itemize}
+    \item \textbf{Sliding Window Management}: Stores recent price data points for calculating moving statistics (mean, standard deviation) with extremely low latency.
+    \item \textbf{Celery Broker}: Acts as the message broker for Celery, queuing anomaly detection tasks.
+\end{itemize}
+
+\subsection{Celery}
+
+\subsubsection{Overview}
+Celery is an asynchronous task queue/job system based on distributed message passing. It handles the background processing of anomaly detection in our architecture.
+
+\subsubsection{Core Features}
+\begin{itemize}
+    \item \textbf{Asynchronous Task Execution}: Allows non-blocking execution of CPU-intensive or I/O-bound tasks.
+    \item \textbf{Task Scheduling}: Supports both immediate and scheduled task execution.
+    \item \textbf{Worker Pools}: Tasks can be distributed across multiple worker processes or machines.
+    \item \textbf{Result Storage}: Task results can be stored and retrieved asynchronously.
+    \item \textbf{Monitoring}: Tools like Flower provide real-time monitoring of task execution.
+\end{itemize}
+
+\subsubsection{Role in Our System}
+Celery manages:
+\begin{itemize}
+    \item Asynchronous execution of anomaly detection algorithms
+    \item Distribution of processing load across multiple worker instances
+    \item Reliable task execution with automatic retries for failed tasks
+\end{itemize}
+
+\subsection{Elasticsearch}
+
+\subsubsection{Overview}
+Elasticsearch is a distributed, RESTful search and analytics engine used for storing and querying detected anomalies.
+
+\subsubsection{Core Features}
+\begin{itemize}
+    \item \textbf{Document-Oriented}: Stores data as JSON documents with flexible schema.
+    \item \textbf{Full-Text Search}: Powerful search capabilities with relevance scoring.
+    \item \textbf{Analytics}: Built-in aggregation framework for data analytics.
+    \item \textbf{Distributed Architecture}: Scales horizontally across multiple nodes.
+    \item \textbf{Real-Time Operations}: Near real-time indexing and search capabilities.
+\end{itemize}
+
+\subsubsection{Role in Our System}
+Elasticsearch serves as:
+\begin{itemize}
+    \item The persistent storage for detected anomalies
+    \item A search engine for querying historical anomalies by various parameters (time range, symbol, severity)
+    \item An analytics platform for trend analysis and reporting on anomalies
+\end{itemize}
+
+\subsection{FastAPI}
+
+\subsubsection{Overview}
+FastAPI is a modern, high-performance web framework for building APIs with Python, based on standard Python type hints.
+
+\subsubsection{Core Features}
+\begin{itemize}
+    \item \textbf{Performance}: One of the fastest Python frameworks available, comparable to NodeJS and Go.
+    \item \textbf{Automatic Documentation}: Generates interactive API documentation from code.
+    \item \textbf{Data Validation}: Built-in request validation using Pydantic models.
+    \item \textbf{Asynchronous Support}: Native support for async/await syntax.
+    \item \textbf{Standards-Based}: Based on open standards like OpenAPI and JSON Schema.
+\end{itemize}
+
+\subsubsection{Role in Our System}
+FastAPI provides:
+\begin{itemize}
+    \item RESTful endpoints for querying anomalies and generating reports
+    \item A user-friendly API for interacting with the surveillance system
+    \item Authentication and authorization for secure access to sensitive financial data
+    \item Input validation for all API requests
+\end{itemize}
+
+\section{Detailed Components}
+
+\subsection{Data Collection Layer}
+
+\subsubsection{Data Generator}
+
+A Python script simulates real-time stock price data for a specific symbol (e.g., TSLA). It generates data points with a timestamp, price, and volume, introducing occasional artificial anomalies to test the detection mechanism.
+\begin{itemize}
+    \item \textbf{Simulation Logic}: May include random walks with configurable volatility and drift, and occasional price spikes or drops.
+    \item \textbf{Output Format}: JSON, to be easily consumed by Kafka.
+\end{itemize}
+
+\subsubsection{Kafka Producer}
+
+Detected anomalies are stored in Elasticsearch for long-term persistence, efficient searching, and analytics.
+\begin{itemize}
+    \item \textbf{Index}: A dedicated index (e.g., \texttt{financial\_anomalies}) stores anomaly documents.
+    \item \textbf{Document Structure}: Each anomaly document includes details like symbol, timestamp, price, Z-score, window mean, window standard deviation, and alert level.
+\end{itemize}
+\subsubsection{Message Format (JSON)}
+
+A standardized JSON structure is used for messages published to Kafka:
+\begin{minted}[fontsize=\footnotesize, frame=lines, label=JSON Message Format]{json}
+{
+  "symbol": "TSLA",
+  "timestamp": "2025-06-14T10:00:00.000Z", // ISO 8601 format
+  "price": 185.50,
+  "volume": 1500
+}
+\end{minted}
+
+\subsection{Processing Layer}
+
+\subsubsection{Kafka Consumer}
+
+Celery workers act as Kafka consumers, subscribing to the \texttt{stock\_prices} topic. Each worker processes messages independently.
+\begin{itemize}
+    \item \textbf{Consumer Group}: Allows multiple worker instances to consume messages in parallel, distributing the load.
+    \item \textbf{Message Handling}: Upon receiving a message, the worker triggers the anomaly detection task.
+\end{itemize}
+
+
+
+\subsubsection{Celery Workers}
+
+Celery, a distributed task queue, is used for asynchronous processing of anomaly detection.
+\begin{itemize}
+    \item \textbf{Task Definition}: Anomaly detection logic (Z-score calculation) is encapsulated in a Celery task.
+    \item \textbf{Broker}: Redis or RabbitMQ can serve as the message broker for Celery tasks.
+    \item \textbf{Concurrency}: Multiple Celery workers can run concurrently to process high volumes of data.
+\end{itemize}
+
+\subsubsection{Redis for Sliding Window Storage}
+
+Redis, an in-memory data store, is used to maintain a sliding window of recent price data for each stock symbol. This is essential for calculating the moving average and standard deviation required for the Z-score.
+\begin{itemize}
+    \item \textbf{Data Structure}: A Redis list or sorted set can be used for each symbol, storing recent prices and timestamps.
+    \item \textbf{Window Management}: As new data arrives, old data points outside the window are removed.
+    \item \textbf{Performance}: Redis provides low-latency access, crucial for real-time calculations.
+\end{itemize}
+
+\subsubsection{Detection Algorithm: Z-Score Implementation}
+
+The core detection logic involves:
+\begin{enumerate}
+    \item Retrieving the current sliding window of prices for the symbol from Redis.
+    \item Calculating the mean ($\mu$) and standard deviation ($\sigma$) of prices in the window.
+    \item Calculating the Z-score for the new price: $Z = (price - \mu) / \sigma$.
+    \item If $|Z|$ exceeds a configurable threshold (e.g., 2.5 or 3), an anomaly is flagged.
+\end{enumerate}
+
+\subsection{Storage Layer}
+
+\subsubsection{Elasticsearch for Anomaly Indexing}
+
+Detected anomalies are stored in Elasticsearch for long-term persistence, efficient searching, and analytics.
+\begin{itemize}
+    \item \textbf{Index}: A dedicated index (e.g., \texttt{financial\_anomalies}) stores anomaly documents.
+    \item \textbf{Document Structure}: Each anomaly document includes details like symbol, timestamp, price, Z-score, window mean, window standard deviation, and alert level.
+\end{itemize}
+
+\subsubsection{Data Schema (Elasticsearch Mapping)}
+
+The Elasticsearch index mapping defines the data types and properties of the anomaly documents.
+\begin{minted}[fontsize=\footnotesize, frame=lines, label=Elasticsearch Mapping]{json}
+{
+  "mappings": {
+    "properties": {
+      "symbol": { "type": "keyword" },
+      "timestamp": { "type": "date" },
+      "price": { "type": "float" },
+      "volume": { "type": "integer" },
+      "z_score": { "type": "float" },
+      "window_mean": { "type": "float" },
+      "window_std_dev": { "type": "float" },
+      "anomaly_type": { "type": "keyword" }, // e.g., "price_spike", "price_drop"
+      "threshold": { "type": "float" }
+    }
+  }
+}
+\end{minted}
+
+\subsubsection{Indexing Strategy}
+\begin{itemize}
+    \item \textbf{Time-based Indices}: Optionally, daily or weekly indices can be used to manage data retention and improve query performance on recent data (e.g., \texttt{financial\_anomalies-YYYY-MM-DD}).
+    \item \textbf{Sharding and Replication}: Configured for scalability and fault tolerance.
+\end{itemize}
+\subsection{API and Reporting Layer}
+
+\subsubsection{FastAPI for REST Endpoints}
+
+A FastAPI application provides RESTful APIs for interacting with the system.
+\begin{itemize}
+    \item \textbf{Endpoints}:
+        \begin{itemize}
+            \item `GET /anomalies`: Retrieve a list of anomalies with filtering options (symbol, date range).
+            \item `GET /anomalies/{id}`: Get details of a specific anomaly.
+            \item `POST /reports`: Generate and retrieve reports (PDF/CSV).
+            \item `GET /status`: System health check.
+        \end{itemize}
+    \item \textbf{Data Validation}: Pydantic models are used for request and response validation.
+    \item \textbf{Asynchronous Operations}: Leverages FastAPI's async capabilities for non-blocking I/O when interacting with Elasticsearch or generating reports.
+\end{itemize}
+
+\subsubsection{Report Generator}
+
+This module generates reports in PDF and CSV formats.
+\begin{itemize}
+    \item \textbf{Libraries}: e.g., `reportlab` or `WeasyPrint` for PDF, standard `csv` module for CSV.
+    \item \textbf{Content}: Reports include summaries of detected anomalies, statistics, and potentially charts.
+\end{itemize}
+
+\subsubsection{Alert System (Kafka Topics)}
+
+When an anomaly is detected and confirmed, an alert message is published to a dedicated Kafka topic (e.g., \texttt{anomaly\_alerts}).
+\begin{itemize}
+    \item \textbf{Alert Message Format}: JSON, containing details of the anomaly and severity.
+    \item \textbf{Consumers}: Separate services (not part of this core project scope but envisioned) can consume these alerts to send notifications via email, SMS, or dashboard updates.
+\end{itemize}
+\section{Justified Technology Choices}
+
+\begin{itemize}
+    \item \textbf{Apache Kafka}: Chosen for its high-throughput, fault-tolerant, and scalable stream processing capabilities, essential for handling real-time financial data feeds.
+    
+    \item \textbf{Elasticsearch}: Selected for its powerful full-text search, analytics capabilities, and horizontal scalability, making it ideal for storing, querying, and analyzing large volumes of anomaly data.
+    
+    \item \textbf{FastAPI (Python)}: Chosen for its high performance (comparable to NodeJS and Go), ease of use, automatic data validation with Pydantic, and built-in support for asynchronous programming, which is crucial for I/O-bound operations.
+    
+    \item \textbf{Celery (Python)}: Selected for distributed task processing. It allows decoupling time-consuming anomaly detection tasks from the main data ingestion flow, improving responsiveness and scalability.
+    
+    \item \textbf{Redis}: Chosen for its speed as an in-memory data store, perfect for managing sliding windows of recent price data required for Z-score calculations with minimal latency.
+    
+    \item \textbf{Python}: Used as the primary programming language due to its extensive libraries for data science (NumPy, Pandas), web development (FastAPI, Celery), and general-purpose programming, along with a large developer community.
+    
+    \item \textbf{Docker}: Used for containerization, ensuring consistent development, testing, and deployment environments across different machines and simplifying the management of microservices.
+\end{itemize}
+
+\section{Design Diagrams}
+
+This section would typically include more detailed diagrams.
+
+\subsection{Sequence Diagram: Detection Flow}
+
+\begin{figure}[H]
+    \centering
+    % Placeholder for Sequence Diagram
+    % \includegraphics[width=\textwidth]{figures/sequence_detection_flow.png}
+    \fbox{\parbox[c][8cm][c]{\textwidth}{\centering Placeholder for Sequence Diagram: Anomaly Detection Flow (e.g., using PlantUML/Mermaid and converting to image)}}
+    \caption{Sequence Diagram: Anomaly Detection Flow}
+    \label{fig:sequence_detection_flow}
+\end{figure}
+
+This diagram would illustrate the sequence of interactions: Data Generator $\rightarrow$ Kafka (price topic) $\rightarrow$ Celery Worker/Kafka Consumer $\rightarrow$ Redis (sliding window) $\rightarrow$ Z-Score Calculation $\rightarrow$ Elasticsearch (if anomaly) $\rightarrow$ Kafka (alert topic).
+
+\subsection{Class Diagram: Data Model (Simplified)}
+
+\begin{figure}[H]
+    \centering
+    % Placeholder for Class Diagram
+    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
+    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Class Diagram: Core Data Entities (e.g., PriceData, AnomalyRecord)}}
+    \caption{Simplified Class Diagram: Data Model}
+    \label{fig:class_diagram_data_model}
+\end{figure}
+
+This diagram would show the main data structures like `PriceData`, `AnomalyRecord`, and their attributes.
+
+\subsection{Deployment Diagram}
+
+\begin{figure}[H]
+    \centering
+    % Placeholder for Deployment Diagram
+    % \includegraphics[width=\textwidth]{figures/deployment_diagram.png}
+    \fbox{\parbox[c][8cm][c]{\textwidth}{\centering Placeholder for Deployment Diagram: Docker containers for Kafka, Zookeeper, Elasticsearch, Redis, FastAPI App, Celery Workers, Data Generator}}
+    \caption{Deployment Diagram}
+    \label{fig:deployment_diagram}
+\end{figure}
+
+This diagram would illustrate how the different components (Kafka, Elasticsearch, FastAPI app, Celery workers, Redis, etc.) are deployed, likely as Docker containers, and how they network with each other.
+
+\subsection{Other UML Diagrams}
+This section provides placeholders for additional UML diagrams that can further illustrate the system's design. These diagrams will be added as the project evolves and specific design aspects require more detailed visualization.
+
+\subsubsection{Use Case Diagram}
+\begin{figure}[h!]
+    \centering
+    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Use Case Diagram}}
+    \caption{Placeholder for Use Case Diagram}
+    \label{fig:placeholder_use_case_diagram}
+\end{figure}
+
+\subsubsection{Component Diagram}
+\begin{figure}[h!]
+    \centering
+    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Component Diagram}}
+    \caption{Placeholder for Component Diagram}
+    \label{fig:placeholder_component_diagram}
+\end{figure}
+
+\subsubsection{Activity Diagram}
+\begin{figure}[h!]
+    \centering
+    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Activity Diagram}}
+    \caption{Placeholder for Activity Diagram}
+    \label{fig:placeholder_activity_diagram}
+\end{figure}
+
+\subsection{Factory Pattern Diagram}
+This diagram will illustrate the implementation of the Factory design pattern within the system, particularly for the data generation and anomaly detection modules. It will show the creator, concrete creators, product, and concrete product classes involved in the pattern.
+\begin{figure}[h!]
+    \centering
+    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Factory Pattern Diagram}}
+    \caption{Placeholder for Factory Pattern Diagram}
+    \label{fig:placeholder_factory_pattern_diagram}
+\end{figure}
