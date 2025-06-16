@@ -271,12 +271,33 @@ Detected anomalies are stored in Elasticsearch for long-term persistence, effici
 A standardized JSON structure is used for messages published to Kafka:
 \begin{minted}[fontsize=\footnotesize, frame=lines, label=JSON Message Format]{json}
 {
+  "timestamp": "2025-04-07 04:00:00",
   "symbol": "TSLA",
-  "timestamp": "2025-06-14T10:00:00.000Z", // ISO 8601 format
-  "price": 185.50,
-  "volume": 1500
+  "open": 218.04,
+  "high": 222.23,
+  "low": 214.80,
+  "close": 215.50,
+  "volume": 56581
 }
+
 \end{minted}
+
+this diagram from different sources into the kafka topic \texttt{stock\_prices}.
+
+\begin{figure}[H]
+    
+   
+    % \hspace{-3cm}
+    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
+    \includegraphics[width=\textwidth]{figures/svgviewer-png-output.png}
+    \caption{different sources into the kafka topic \texttt{stock\_prices}.}
+    \label{fig:data_collection_layer_diagram}
+
+
+\end{figure}
+
+
+
 
 \subsection{Processing Layer}
 
@@ -300,6 +321,19 @@ Celery workers operate independently from Kafka, focusing solely on executing an
     \item \textbf{Task Execution}: Workers retrieve tasks from the Redis queue, perform Z-score calculations, and store results in Elasticsearch if anomalies are detected.
 \end{itemize}
 
+
+this diagram will explain how the Kafka consumer script interacts with Celery workers and Redis(task queue).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/image.png}
+    \caption{Kafka Consumer and Celery Workers Interaction}
+    \label{fig:consumer_celery_diagram}
+\end{figure}
+
+\paragraph{Scalability of Celery Workers}
+Separating Celery workers from other system components enables horizontal scaling. Since Redis acts as a message broker and task queue, additional Celery workers can be added at any time to handle increased processing load. This architecture allows the system to efficiently distribute and process tasks in parallel, ensuring responsiveness even as data volume grows.
+
 \subsubsection{Redis for Sliding Window Storage}
 
 Redis, an in-memory data store, is used to maintain a sliding window of recent price data for each stock symbol. This is essential for calculating the moving average and standard deviation required for the Z-score.
@@ -309,15 +343,45 @@ Redis, an in-memory data store, is used to maintain a sliding window of recent p
     \item \textbf{Performance}: Redis provides low-latency access, crucial for real-time calculations.
 \end{itemize}
 
-\subsubsection{Detection Algorithm: Z-Score Implementation}
+\subsubsection{Anomaly Detection Algorithms}
 
-The core detection logic involves:
+The system employs various algorithms to identify unusual financial data patterns. While several techniques can be used, this section highlights a few, including the Z-score method and basic thresholding.
+
+\paragraph{Common Detection Techniques}
+\begin{itemize}
+    \item \textbf{Z-Score Algorithm}: This method quantifies how far a data point is from the mean of its surrounding data, measured in standard deviations. For a price $x$, the Z-score is:
+    \[ Z = \frac{(x - \mu)}{\sigma} \]
+    where $\mu$ is the mean and $\sigma$ is the standard deviation of recent prices. A Z-score exceeding a threshold (e.g., $|Z| > 3$) indicates an anomaly. The Celery task \texttt{detect\_anomaly} typically implements this, using Redis for windowed data and NumPy for calculations. Detected anomalies are published to Kafka and stored in Elasticsearch.
+
+    \item \textbf{Basic Price Drop/Spike Detection}: Simpler methods involve flagging a data point if its price changes by more than a certain percentage or absolute amount compared to the previous point or a short-term moving average. For example, a sudden 5\% price drop within a minute could be flagged.
+\end{itemize}
+
+\paragraph{Scalability with Factory Design Pattern for Detection Algorithms}
+To accommodate various detection algorithms (e.g., Z-score, Isolation Forest, ARIMA) and allow for easy switching or addition of new ones, the Factory design pattern is beneficial. An \texttt{AnomalyDetectorFactory} can create specific detector instances (e.g., \texttt{ZScoreDetector}, \texttt{PriceChangeDetector}) based on configuration. Each detector would adhere to a common interface.
+
+This pattern promotes:
+\begin{itemize}
+    \item \textbf{Extensibility}: Easily add new algorithms.
+    \item \textbf{Decoupling}: Core logic remains independent of specific algorithm implementations.
+    \item \textbf{Configurability}: Algorithm choice can be managed via configuration.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/detection_factory-1.png}
+    \caption{Anomaly Detector Factory Pattern Diagram}
+    \label{fig:anomaly_detector_factory_diagram}
+\end{figure}
+
+For example, to integrate a new machine learning-based detection method like an Isolation Forest algorithm:
 \begin{enumerate}
-    \item Retrieving the current sliding window of prices for the symbol from Redis.
-    \item Calculating the mean ($\mu$) and standard deviation ($\sigma$) of prices in the window.
-    \item Calculating the Z-score for the new price: $Z = (price - \mu) / \sigma$.
-    \item If $|Z|$ exceeds a configurable threshold (e.g., 2.5 or 3), an anomaly is flagged.
+    \item \textbf{Create New Detector Class}: Implement a new class, say \texttt{IsolationForestDetector}, that adheres to the common detector interface (e.g., it has a \texttt{detect(data)} method).
+    \item \textbf{Implement Detection Logic}: Inside \texttt{IsolationForestDetector}, implement the logic to train (if necessary) and use an Isolation Forest model to identify anomalies in the input data.
+    \item \textbf{Update Factory}: Modify the \texttt{AnomalyDetectorFactory} to include a case for creating an \texttt{IsolationForestDetector}. This might involve adding a new 'if' condition or a new entry in a dictionary that maps algorithm names to detector classes (e.g., if the configuration specifies "isolation\_forest", the factory returns an instance of \texttt{IsolationForestDetector}).
 \end{enumerate}
+The core system components that use the factory to get a detector instance would not need to change, as they would still request a detector through the factory and use the common interface. This demonstrates the ease of extending the system with new detection capabilities.
+
+Further details on implemented algorithms are typically found in the project's codebase or appendix.
 
 \subsection{Storage Layer}
 
@@ -355,6 +419,29 @@ The Elasticsearch index mapping defines the data types and properties of the ano
     \item \textbf{Time-based Indices}: Optionally, daily or weekly indices can be used to manage data retention and improve query performance on recent data (e.g., \texttt{financial\_anomalies-YYYY-MM-DD}).
     \item \textbf{Sharding and Replication}: Configured for scalability and fault tolerance.
 \end{itemize}
+
+
+The following diagram will show teh data flow for all the detail compemnts described above, including the data generator, Kafka producer, consumer script, Celery workers, Redis for sliding window storage, and Elasticsearch for anomaly indexing.
+
+
+\begin{sidewaysfigure}
+\centering
+
+% \hspace{5cm}
+
+\includegraphics[width=\textwidth]{figures/backend-1.png}
+
+\caption{A diagram showing the data flow for all the detail components described above,}
+
+\label{fig:Expdiagram1}
+\end{sidewaysfigure}
+
+\break
+
+
+
+
+
 \subsection{API and Reporting Layer}
 
 \subsubsection{FastAPI for REST Endpoints}
@@ -370,15 +457,83 @@ A FastAPI application provides RESTful APIs for interacting with the system.
         \end{itemize}
     \item \textbf{Data Validation}: Pydantic models are used for request and response validation.
     \item \textbf{Asynchronous Operations}: Leverages FastAPI's async capabilities for non-blocking I/O when interacting with Elasticsearch or generating reports.
+    \item \textbf{Documentation}: Automatically generates OpenAPI documentation, accessible at `/docs` or `/redoc`. thanks to Swagger UI integration.we can easily visualize and test the API endpoints.
 \end{itemize}
+
+
+
+This next sequence diagram illustrates the interaction between the FastAPI application and the underlying data storage (Elasticsearch) and processing (Celery) for querying anomalies and generating reports.
+
+
+% \subsection{Sequence Diagram: Api }
+
+\begin{figure}[H]
+    \centering
+    % Placeholder for Class Diagram
+    % \hspace{-3cm}
+    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
+    \includegraphics[width=1.2\textwidth,angle=90]{figures/api-1.png}
+    \caption{Simplified Class Diagram: Data Model}
+    \label{fig:class_diagram_data_model}
+\end{figure}
+
+% This diagram would illustrate the sequence of interactions: FastAPI API $\rightarrow$ Elasticsearch (query anomalies) $\rightarrow$ Celery Worker (generate report) $\rightarrow$ FastAPI API (return report).
+% it shows variant type of requests (geting anomalies, generating reports, etc.) and their interactions with the underlying data storage (Elasticsearch) and processing (Celery).
+
+
 
 \subsubsection{Report Generator}
 
-This module generates reports in PDF and CSV formats.
+This module generates reports in multiple formats (PDF , CSV.....)
 \begin{itemize}
     \item \textbf{Libraries}: e.g., `reportlab` or `WeasyPrint` for PDF, standard `csv` module for CSV.
     \item \textbf{Content}: Reports include summaries of detected anomalies, statistics, and potentially charts.
+    \item \textbf{Formatting}: The formatting of the report depends on the selected format. For example, PDF reports can include sophisticated formatting with tables and charts, enhancing readability and visual appeal. 
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][5cm][c]{0.8\textwidth}{\centering Placeholder for PDF Report Screenshot}}
+    \caption{Sample PDF Report}
+    \label{fig:pdf_report_screenshot}
+\end{figure}
+
+In contrast, CSV reports are formatted as comma-separated values, suitable for importing into spreadsheet software or other data analysis tools. 
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][5cm][c]{0.8\textwidth}{\centering Placeholder for CSV Report Screenshot}}
+    \caption{Sample CSV Report}
+    \label{fig:csv_report_screenshot}
+\end{figure}
 \end{itemize}
+
+for the report generation, we use a Factory design pattern to create different report generators based on the requested format. This allows for easy extensibility if new report formats are needed in the future.
+\subsection{Factory Pattern Diagram}
+This diagram will illustrate the implementation of the Factory design pattern within the system, particularly for the data generation and anomaly detection modules. It will show the creator, concrete creators, product, and concrete product classes involved in the pattern.
+
+This architecture utilizes the Factory Method design pattern, which provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created. In this specific context, the \texttt{ReportFactory} acts as the creator, abstracting the instantiation logic of different report generators (e.g., \texttt{PDFReportGenerator}, \texttt{CSVReportGenerator}).
+
+\textbf{Why this pattern was used:}
+
+The Factory Method pattern was chosen to decouple the client code from the concrete implementations of report generators. This means that the part of the application that needs a report doesn't need to know whether it's getting a PDF, CSV, or any other type of report. It simply requests a report generator from the \texttt{ReportFactory} based on a specified format. This promotes a clean separation of concerns and reduces direct dependencies.
+
+\textbf{Scalability:}
+
+This pattern significantly enhances scalability. If a new report format (e.g., Excel, XML) is required in the future, a new concrete \texttt{IReportGenerator} implementation (e.g., \texttt{ExcelReportGenerator}) can be added without modifying existing client code or the \texttt{ReportFactory}'s \texttt{get\_generator} method.
+
+\begin{figure}[!htb]
+    \centering
+    % Placeholder for Class Diagram
+    % \hspace{-3cm}
+    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
+    \includegraphics[width=\textwidth]{figures/generator-1.png}
+    \caption{Factory Pattern Diagram}
+    \label{fig:factory_pattern_diagram}
+\end{figure}
+ 
+
+
+
 
 \subsubsection{Alert System (Kafka Topics)}
 
@@ -411,39 +566,11 @@ This section would typically include more detailed diagrams.
 
 \subsection{Sequence Diagram: Detection Flow}
 
-\begin{sidewaysfigure}
-\centering
-
-\centering
-
-% \hspace{5cm}
-
-\includegraphics[width=\textwidth]{figures/backend-1.png}
-
-\caption{blablaa another figure}
-
-\label{fig:Expdiagram1}
-\end{sidewaysfigure}
-
 
 This diagram would illustrate the sequence of interactions: Data Generator $\rightarrow$ Kafka (price topic) $\rightarrow$ Celery Worker/Kafka Consumer $\rightarrow$ Redis (sliding window) $\rightarrow$ Z-Score Calculation $\rightarrow$ Elasticsearch (if anomaly) $\rightarrow$ Kafka (alert topic).
 
 \break
 
-\subsection{Sequence Diagram: Api }
-
-\begin{figure}[H]
-    \centering
-    % Placeholder for Class Diagram
-    % \hspace{-3cm}
-    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
-    \includegraphics[width=1.2\textwidth,angle=90]{figures/api-1.png}
-    \caption{Simplified Class Diagram: Data Model}
-    \label{fig:class_diagram_data_model}
-\end{figure}
-
-% This diagram would illustrate the sequence of interactions: FastAPI API $\rightarrow$ Elasticsearch (query anomalies) $\rightarrow$ Celery Worker (generate report) $\rightarrow$ FastAPI API (return report).
-% it shows variant type of requests (geting anomalies, generating reports, etc.) and their interactions with the underlying data storage (Elasticsearch) and processing (Celery).
 
 
 
@@ -509,26 +636,3 @@ This section provides placeholders for additional UML diagrams that can further 
 %     \label{fig:placeholder_activity_diagram}
 % \end{figure}
 
-\subsection{Factory Pattern Diagram}
-This diagram will illustrate the implementation of the Factory design pattern within the system, particularly for the data generation and anomaly detection modules. It will show the creator, concrete creators, product, and concrete product classes involved in the pattern.
-
-This architecture utilizes the Factory Method design pattern, which provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created. In this specific context, the \texttt{ReportFactory} acts as the creator, abstracting the instantiation logic of different report generators (e.g., \texttt{PDFReportGenerator}, \texttt{CSVReportGenerator}).
-
-\textbf{Why this pattern was used:}
-
-The Factory Method pattern was chosen to decouple the client code from the concrete implementations of report generators. This means that the part of the application that needs a report doesn't need to know whether it's getting a PDF, CSV, or any other type of report. It simply requests a report generator from the \texttt{ReportFactory} based on a specified format. This promotes a clean separation of concerns and reduces direct dependencies.
-
-\textbf{Scalability:}
-
-This pattern significantly enhances scalability. If a new report format (e.g., Excel, XML) is required in the future, a new concrete \texttt{IReportGenerator} implementation (e.g., \texttt{ExcelReportGenerator}) can be added without modifying existing client code or the \texttt{ReportFactory}'s \texttt{get\_generator} method.
-
-\begin{figure}[!htb]
-    \centering
-    % Placeholder for Class Diagram
-    % \hspace{-3cm}
-    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
-    \includegraphics[width=\textwidth]{figures/generator-1.png}
-    \caption{Factory Pattern Diagram}
-    \label{fig:factory_pattern_diagram}
-\end{figure}
- 

@@ -91,17 +91,7 @@ The data generation module can leverage the Factory design pattern to create dif
 
 This module consumes data from Kafka and performs Z-score based anomaly detection. It runs as a Celery task.
 
-\subsubsection{Z-Score Algorithm Implementation}
-The core logic involves fetching recent prices from Redis, calculating mean and standard deviation, and then the Z-score for the current price. The Celery task \texttt{detect\_anomaly} is triggered by messages from the \texttt{stock\_prices} Kafka topic. It uses Redis lists to maintain a sliding window of recent prices for each symbol. NumPy is used for efficient calculation of mean and standard deviation. If the Z-score exceeds the threshold, an anomaly event is created and published to another Kafka topic (\texttt{anomaly\_alerts}) and (conceptually) stored in Elasticsearch. Edge cases like insufficient data or zero standard deviation are handled. The full implementation is available in the appendix.
 
-\textbf{Application of Factory Design Pattern for Anomaly Detection:}
-The anomaly detection module can also benefit from the Factory design pattern to dynamically select and instantiate different detection algorithms (e.g., Z-score, Isolation Forest, ARIMA). An `AnomalyDetectorFactory` could provide a method to create instances of `ZScoreDetector`, `IsolationForestDetector`, or `ARIMADetector` based on configuration or runtime parameters. This allows for easy swapping or addition of new detection algorithms without altering the core processing logic.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{figures/detection_factory-1.png}
-    \caption{Placeholder for Anomaly Detector Factory Pattern Diagram}
-    \label{fig:anomaly_detector_factory_diagram}
-\end{figure}
 
 \subsection{Storage Module (Elasticsearch Integration)}
 
