@@ -1,0 +1,6 @@
+*
+
+!*.tex
+!chapters/
+!figures/*
+!.gitignore
