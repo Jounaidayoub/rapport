@@ -1,5 +1,8 @@
 % Chapter 3: Design and Architecture
+
+
 \chapter{Design and Architecture}
+
 
 \section{Global System Architecture}
 
@@ -77,7 +80,17 @@ The implementation of this system relies on several key technologies, each chose
 \subsection{Apache Kafka}
 
 \subsubsection{Overview}
+
+
+\begin{wrapfigure}{l}{2.5cm}  % 'l' = left side, 2.5cm = width of the box
+    \vspace{-10pt} % Adjust vertical spacing
+    \includegraphics[width=2.3cm]{figures/0_CuYxguE1vG7PLngW.png}
+    \vspace{-10pt}
+\end{wrapfigure}
+
 Apache Kafka is a distributed event streaming platform used in our architecture for real-time data ingestion and message propagation. It provides a highly reliable, scalable system for publishing and subscribing to streams of records.
+
+
 
 \subsubsection{Core Features}
 \begin{itemize}
@@ -87,6 +100,15 @@ Apache Kafka is a distributed event streaming platform used in our architecture 
     \item \textbf{Persistent Storage}: Messages are persisted to disk with configurable retention periods.
     \item \textbf{Replication}: Data is replicated across multiple nodes to prevent data loss.
 \end{itemize}
+
+\subsubsection{Kafka Architecture}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/kafka.png}
+    \caption{Kafka Architecture}
+    \label{fig:kafka_architecture}
+\end{figure}
 
 \subsubsection{Role in Our System}
 In our financial surveillance system, Kafka serves as:
@@ -100,6 +122,16 @@ In our financial surveillance system, Kafka serves as:
 \subsection{Redis}
 
 \subsubsection{Overview}
+
+
+\begin{wrapfigure}{l}{2.5cm}  % 'l' = left side, 2.5cm = width of the box
+    \vspace{-10pt} % Adjust vertical spacing
+    \includegraphics[width=2.3cm]{figures/redis.png}
+    \vspace{-10pt}
+\end{wrapfigure}
+
+
+
 Redis is an in-memory data structure store that we use both as a message broker for Celery and for maintaining sliding windows of recent stock data.
 
 \subsubsection{Core Features}
@@ -121,6 +153,16 @@ Redis performs two critical functions:
 \subsection{Celery}
 
 \subsubsection{Overview}
+
+
+\begin{wrapfigure}{l}{2.5cm}  % 'l' = left side, 2.5cm = width of the box
+    \vspace{-10pt} % Adjust vertical spacing
+    \includegraphics[width=2.3cm]{figures/Celery_logo.png}
+    \vspace{-10pt}
+\end{wrapfigure}
+
+
+
 Celery is an asynchronous task queue/job system based on distributed message passing. It handles the background processing of anomaly detection in our architecture.
 
 \subsubsection{Core Features}
@@ -142,7 +184,19 @@ Celery manages:
 
 \subsection{Elasticsearch}
 
+
+
 \subsubsection{Overview}
+
+
+\begin{wrapfigure}{l}{2.5cm}  % 'l' = left side, 2.5cm = width of the box
+    \vspace{-10pt} % Adjust vertical spacing
+    \includegraphics[width=2.3cm]{figures/Elasticsearhc.png}
+    \vspace{-10pt}
+\end{wrapfigure}
+
+
+
 Elasticsearch is a distributed, RESTful search and analytics engine used for storing and querying detected anomalies.
 
 \subsubsection{Core Features}
@@ -165,6 +219,14 @@ Elasticsearch serves as:
 \subsection{FastAPI}
 
 \subsubsection{Overview}
+
+\begin{wrapfigure}{l}{2.5cm}  % 'l' = left side, 2.5cm = width of the box
+    \vspace{-10pt} % Adjust vertical spacing
+    \includegraphics[width=2.3cm]{figures/FastAPI_logo.png}
+    \vspace{-10pt}
+\end{wrapfigure}
+
+
 FastAPI is a modern, high-performance web framework for building APIs with Python, based on standard Python type hints.
 
 \subsubsection{Core Features}
@@ -218,23 +280,24 @@ A standardized JSON structure is used for messages published to Kafka:
 
 \subsection{Processing Layer}
 
-\subsubsection{Kafka Consumer}
+\subsubsection{Kafka Consumer Script}
 
-Celery workers act as Kafka consumers, subscribing to the \texttt{stock\_prices} topic. Each worker processes messages independently.
+A dedicated Python script acts as the Kafka consumer, subscribing to the \texttt{stock\_prices} topic and bridging the gap between Kafka and Celery.
 \begin{itemize}
-    \item \textbf{Consumer Group}: Allows multiple worker instances to consume messages in parallel, distributing the load.
-    \item \textbf{Message Handling}: Upon receiving a message, the worker triggers the anomaly detection task.
+    \item \textbf{Consumer Group}: The script joins a consumer group to enable parallel processing when multiple consumer instances are running.
+    \item \textbf{Message Handling}: Upon receiving each message from the Kafka topic, the script immediately dispatches an anomaly detection task to the Celery queue.
+    \item \textbf{Task Delegation}: For each data point consumed, the script calls the appropriate Celery task with the message payload as parameters.
+    \item \textbf{Error Handling}: Implements retry logic and dead letter handling for failed message processing.
 \end{itemize}
-
-
 
 \subsubsection{Celery Workers}
 
-Celery, a distributed task queue, is used for asynchronous processing of anomaly detection.
+Celery workers operate independently from Kafka, focusing solely on executing anomaly detection tasks queued by the consumer script.
 \begin{itemize}
-    \item \textbf{Task Definition}: Anomaly detection logic (Z-score calculation) is encapsulated in a Celery task.
-    \item \textbf{Broker}: Redis or RabbitMQ can serve as the message broker for Celery tasks.
-    \item \textbf{Concurrency}: Multiple Celery workers can run concurrently to process high volumes of data.
+    \item \textbf{Task Definition}: Anomaly detection logic (Z-score calculation) is encapsulated in Celery tasks that receive stock price data as input parameters.
+    \item \textbf{Broker}: Redis serves as the message broker between the Kafka consumer script and Celery workers.
+    \item \textbf{Concurrency}: Multiple Celery workers can run concurrently to process the queued anomaly detection tasks.
+    \item \textbf{Task Execution}: Workers retrieve tasks from the Redis queue, perform Z-score calculations, and store results in Elasticsearch if anomalies are detected.
 \end{itemize}
 
 \subsubsection{Redis for Sliding Window Storage}
@@ -348,24 +411,33 @@ This section would typically include more detailed diagrams.
 
 \subsection{Sequence Diagram: Detection Flow}
 
-\begin{figure}[H]
-    \centering
-    % Placeholder for Sequence Diagram
-    % \includegraphics[width=\textwidth]{figures/sequence_detection_flow.png}
-    \fbox{\parbox[c][8cm][c]{\textwidth}{\centering Placeholder for Sequence Diagram: Anomaly Detection Flow (e.g., using PlantUML/Mermaid and converting to image)}}
-    \caption{Sequence Diagram: Anomaly Detection Flow}
-    \label{fig:sequence_detection_flow}
-\end{figure}
+\begin{sidewaysfigure}
+\centering
+
+\centering
+
+% \hspace{5cm}
+
+\includegraphics[width=\textwidth]{figures/backend-1.png}
+
+\caption{blablaa another figure}
+
+\label{fig:Expdiagram1}
+\end{sidewaysfigure}
+
 
 This diagram would illustrate the sequence of interactions: Data Generator $\rightarrow$ Kafka (price topic) $\rightarrow$ Celery Worker/Kafka Consumer $\rightarrow$ Redis (sliding window) $\rightarrow$ Z-Score Calculation $\rightarrow$ Elasticsearch (if anomaly) $\rightarrow$ Kafka (alert topic).
 
-\subsection{Class Diagram: Data Model (Simplified)}
+\break
+
+\subsection{Sequence Diagram: Api }
 
 \begin{figure}[H]
     \centering
     % Placeholder for Class Diagram
+    % \hspace{-3cm}
     % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
-    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Class Diagram: Core Data Entities (e.g., PriceData, AnomalyRecord)}}
+    \includegraphics[width=1.2\textwidth,angle=90]{figures/api-1.png}
     \caption{Simplified Class Diagram: Data Model}
     \label{fig:class_diagram_data_model}
 \end{figure}
