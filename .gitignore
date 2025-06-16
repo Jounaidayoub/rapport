@@ -2,5 +2,5 @@
 
 !*.tex
 !chapters/
-!figures/*
+!figures/*.png
 !.gitignore

@@ -96,9 +96,9 @@ The core logic involves fetching recent prices from Redis, calculating mean and 
 
 \textbf{Application of Factory Design Pattern for Anomaly Detection:}
 The anomaly detection module can also benefit from the Factory design pattern to dynamically select and instantiate different detection algorithms (e.g., Z-score, Isolation Forest, ARIMA). An `AnomalyDetectorFactory` could provide a method to create instances of `ZScoreDetector`, `IsolationForestDetector`, or `ARIMADetector` based on configuration or runtime parameters. This allows for easy swapping or addition of new detection algorithms without altering the core processing logic.
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
-    \fbox{\parbox[c][5cm][c]{0.8\textwidth}{\centering Placeholder for Anomaly Detector Factory Pattern Diagram}}
+    \includegraphics[width=\textwidth]{figures/detection_factory-1.png}
     \caption{Placeholder for Anomaly Detector Factory Pattern Diagram}
     \label{fig:anomaly_detector_factory_diagram}
 \end{figure}

@@ -442,7 +442,32 @@ This diagram would illustrate the sequence of interactions: Data Generator $\rig
     \label{fig:class_diagram_data_model}
 \end{figure}
 
-This diagram would show the main data structures like `PriceData`, `AnomalyRecord`, and their attributes.
+% This diagram would illustrate the sequence of interactions: FastAPI API $\rightarrow$ Elasticsearch (query anomalies) $\rightarrow$ Celery Worker (generate report) $\rightarrow$ FastAPI API (return report).
+% it shows variant type of requests (geting anomalies, generating reports, etc.) and their interactions with the underlying data storage (Elasticsearch) and processing (Celery).
+
+
+
+
+\subsection{sequence Diagram: Batch report generation}
+\begin{figure}[H]
+    
+    % Placeholder for Class Diagram
+    % \hspace{-3cm}
+    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
+    \includegraphics[width=1.2\textwidth]{figures/batch-1.png}
+    \caption{Batch Report Generation Sequence Diagram}
+    \label{fig:batch_report_generation_sequence_diagram}
+
+
+\end{figure}
+
+
+this diagram illustrate how shecduled batch report generation works, showing the interaction between the FastAPI application, Celery workers, and Elasticsearch for generating reports based on historical anomalies.
+the layer responsibble for trigering the Task is the Celery Beat, which schedules the task to run at specific intervals (e.g., daily, weekly).
+they work based on the linux cron system, which allows for scheduling tasks to run at specific times or intervals.
+
+
+
 
 \subsection{Deployment Diagram}
 
@@ -460,35 +485,50 @@ This diagram would illustrate how the different components (Kafka, Elasticsearch
 \subsection{Other UML Diagrams}
 This section provides placeholders for additional UML diagrams that can further illustrate the system's design. These diagrams will be added as the project evolves and specific design aspects require more detailed visualization.
 
-\subsubsection{Use Case Diagram}
-\begin{figure}[h!]
-    \centering
-    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Use Case Diagram}}
-    \caption{Placeholder for Use Case Diagram}
-    \label{fig:placeholder_use_case_diagram}
-\end{figure}
+% \subsubsection{Use Case Diagram}
+% \begin{figure}[h]
+%     \centering
+%     \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Use Case Diagram}}
+%     \caption{Placeholder for Use Case Diagram}
+%     \label{fig:placeholder_use_case_diagram}
+% \end{figure}
 
-\subsubsection{Component Diagram}
-\begin{figure}[h!]
-    \centering
-    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Component Diagram}}
-    \caption{Placeholder for Component Diagram}
-    \label{fig:placeholder_component_diagram}
-\end{figure}
+% \subsubsection{Component Diagram}
+% \begin{figure}[h]
+%     \centering
+%     \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Component Diagram}}
+%     \caption{Placeholder for Component Diagram}
+%     \label{fig:placeholder_component_diagram}
+% \end{figure}
 
-\subsubsection{Activity Diagram}
-\begin{figure}[h!]
-    \centering
-    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Activity Diagram}}
-    \caption{Placeholder for Activity Diagram}
-    \label{fig:placeholder_activity_diagram}
-\end{figure}
+% \subsubsection{Activity Diagram}
+% \begin{figure}[h]
+%     \centering
+%     \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Activity Diagram}}
+%     \caption{Placeholder for Activity Diagram}
+%     \label{fig:placeholder_activity_diagram}
+% \end{figure}
 
 \subsection{Factory Pattern Diagram}
 This diagram will illustrate the implementation of the Factory design pattern within the system, particularly for the data generation and anomaly detection modules. It will show the creator, concrete creators, product, and concrete product classes involved in the pattern.
-\begin{figure}[h!]
+
+This architecture utilizes the Factory Method design pattern, which provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created. In this specific context, the \texttt{ReportFactory} acts as the creator, abstracting the instantiation logic of different report generators (e.g., \texttt{PDFReportGenerator}, \texttt{CSVReportGenerator}).
+
+\textbf{Why this pattern was used:}
+
+The Factory Method pattern was chosen to decouple the client code from the concrete implementations of report generators. This means that the part of the application that needs a report doesn't need to know whether it's getting a PDF, CSV, or any other type of report. It simply requests a report generator from the \texttt{ReportFactory} based on a specified format. This promotes a clean separation of concerns and reduces direct dependencies.
+
+\textbf{Scalability:}
+
+This pattern significantly enhances scalability. If a new report format (e.g., Excel, XML) is required in the future, a new concrete \texttt{IReportGenerator} implementation (e.g., \texttt{ExcelReportGenerator}) can be added without modifying existing client code or the \texttt{ReportFactory}'s \texttt{get\_generator} method.
+
+\begin{figure}[!htb]
     \centering
-    \fbox{\parbox[c][6cm][c]{0.8\textwidth}{\centering Placeholder for Factory Pattern Diagram}}
-    \caption{Placeholder for Factory Pattern Diagram}
-    \label{fig:placeholder_factory_pattern_diagram}
+    % Placeholder for Class Diagram
+    % \hspace{-3cm}
+    % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
+    \includegraphics[width=\textwidth]{figures/generator-1.png}
+    \caption{Factory Pattern Diagram}
+    \label{fig:factory_pattern_diagram}
 \end{figure}
+ 
