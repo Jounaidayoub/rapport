@@ -247,6 +247,37 @@ FastAPI provides:
     \item Input validation for all API requests
 \end{itemize}
 
+
+\subsection{Docker}
+
+\subsubsection{Overview}
+
+\begin{wrapfigure}{l}{2.5cm}
+    \vspace{-10pt}
+    \includegraphics[width=2.3cm]{figures/docker.png}
+    \vspace{-10pt}
+\end{wrapfigure}
+
+Docker is a platform for developing, shipping, and running applications in lightweight, portable containers. It enables consistent environments across development, testing, and production.
+
+\subsubsection{Core Features}
+\begin{itemize}
+    \item \textbf{Containerization}: Packages applications and dependencies into isolated containers.
+    \item \textbf{Portability}: Ensures applications run the same way on any system with Docker installed.
+    \item \textbf{Resource Efficiency}: Containers share the host OS kernel, reducing overhead compared to virtual machines.
+    \item \textbf{Rapid Deployment}: Containers can be started, stopped, and replicated quickly.
+    \item \textbf{Ecosystem}: Rich tooling (Docker Compose, Docker Hub) and integration with CI/CD pipelines.
+\end{itemize}
+
+\subsubsection{Role in Our System}
+Docker is used to:
+\begin{itemize}
+    \item Containerize all core services (Kafka, Redis, Elasticsearch, FastAPI, Celery, etc.) for reproducible deployments.
+    \item Simplify orchestration and networking using Docker Compose.
+    \item Enable easy scaling and management of microservices.
+    \item Provide isolated, consistent environments for development and production.
+\end{itemize}
+
 \section{Detailed Components}
 
 \subsection{Data Collection Layer}
@@ -444,21 +475,44 @@ The following diagram will show teh data flow for all the detail compemnts descr
 
 \subsection{API and Reporting Layer}
 
-\subsubsection{FastAPI for REST Endpoints}
+\subsubsection{API Endpoints}
+The Stock Anomaly Detection API provides several endpoints to fetch anomaly data and generate reports.
 
-A FastAPI application provides RESTful APIs for interacting with the system.
+\paragraph{Alerting Endpoints}
 \begin{itemize}
-    \item \textbf{Endpoints}:
-        \begin{itemize}
-            \item `GET /anomalies`: Retrieve a list of anomalies with filtering options (symbol, date range).
-            \item `GET /anomalies/{id}`: Get details of a specific anomaly.
-            \item `POST /reports`: Generate and retrieve reports (PDF/CSV).
-            \item `GET /status`: System health check.
-        \end{itemize}
-    \item \textbf{Data Validation}: Pydantic models are used for request and response validation.
-    \item \textbf{Asynchronous Operations}: Leverages FastAPI's async capabilities for non-blocking I/O when interacting with Elasticsearch or generating reports.
-    \item \textbf{Documentation}: Automatically generates OpenAPI documentation, accessible at `/docs` or `/redoc`. thanks to Swagger UI integration.we can easily visualize and test the API endpoints.
+    \item \verb|GET /|: The root endpoint. Returns basic information about the API, including its name, version, and a list of available primary endpoints.
+    \item \verb|GET /alerts|: Fetches all detected stock anomalies within a specified date range.
+    \begin{itemize}
+        \item Parameters: \verb|from| (start date), \verb|to| (end date).
+    \end{itemize}
+    \item \verb|GET /alerts/{symbol}/|: Retrieves anomalies for a specific stock symbol within a given date range.
+    \begin{itemize}
+        \item Parameters: \verb|symbol| (stock symbol), \verb|from| (start date), \verb|to| (end date).
+    \end{itemize}
 \end{itemize}
+
+\paragraph{V1 Report Generation Endpoints}
+The API offers robust report generation capabilities through its modern V1 endpoints, featuring powerful asynchronous operations.
+
+\begin{itemize}
+    \item \verb|POST /v1/reports|: This is the \textbf{primary endpoint} for all report-related operations. It offers a unified interface for both synchronous report generation and asynchronous generation with email delivery.
+    \begin{itemize}
+        \item Parameters: \verb|from|, \verb|to|, \verb|symbol|, \verb|format|.
+        \item Optional Parameter: \verb|recipient_email|.
+        \item \textbf{Behavior}:
+        \begin{itemize}
+            \item If \verb|recipient_email| is \textbf{not provided}, the report is generated synchronously and returned directly in the HTTP response.
+            \item If \verb|recipient_email| \textbf{is provided}, the API gloriously initiates an \textbf{asynchronous background task} to generate the report. Upon successful completion, the report is automatically dispatched to the specified email address. This non-blocking operation allows users to continue interacting with other services or receive a quick acknowledgment (task ID) without waiting for the potentially time-consuming report generation process to finish.
+        \end{itemize}
+    \end{itemize}
+    \item \verb|GET /v1/reports/status/{task_id}|: Allows users to check the status of an asynchronously initiated report generation task using the task ID returned by the \verb|/v1/reports| endpoint (when \verb|recipient_email| is used).
+    \begin{itemize}
+        \item Parameter: \verb|task_id|.
+    \end{itemize}
+\end{itemize}
+
+The \verb|/v1/reports| endpoint significantly enhances user experience by providing a single, powerful interface for report generation. The asynchronous execution, particularly when coupled with email notifications, ensures that the system remains responsive and efficient, especially for large reports or during peak load times.
+
 
 
 
@@ -488,11 +542,11 @@ This module generates reports in multiple formats (PDF , CSV.....)
 \begin{itemize}
     \item \textbf{Libraries}: e.g., `reportlab` or `WeasyPrint` for PDF, standard `csv` module for CSV.
     \item \textbf{Content}: Reports include summaries of detected anomalies, statistics, and potentially charts.
-    \item \textbf{Formatting}: The formatting of the report depends on the selected format. For example, PDF reports can include sophisticated formatting with tables and charts, enhancing readability and visual appeal. 
+    \item \textbf{Formatting}: The formatting of the report depends on the selected format. For example, PDF reports can include sophisticated formatting with tables , enhancing readability and visual appeal. 
 
 \begin{figure}[H]
     \centering
-    \fbox{\parbox[c][5cm][c]{0.8\textwidth}{\centering Placeholder for PDF Report Screenshot}}
+    \includegraphics[width=\textwidth]{figures/sad/pdf_screen.png}
     \caption{Sample PDF Report}
     \label{fig:pdf_report_screenshot}
 \end{figure}
@@ -501,7 +555,7 @@ In contrast, CSV reports are formatted as comma-separated values, suitable for i
 
 \begin{figure}[H]
     \centering
-    \fbox{\parbox[c][5cm][c]{0.8\textwidth}{\centering Placeholder for CSV Report Screenshot}}
+    \includegraphics[width=\textwidth]{figures/sad/csv_screnn.png}
     \caption{Sample CSV Report}
     \label{fig:csv_report_screenshot}
 \end{figure}
@@ -521,7 +575,7 @@ The Factory Method pattern was chosen to decouple the client code from the concr
 
 This pattern significantly enhances scalability. If a new report format (e.g., Excel, XML) is required in the future, a new concrete \texttt{IReportGenerator} implementation (e.g., \texttt{ExcelReportGenerator}) can be added without modifying existing client code or the \texttt{ReportFactory}'s \texttt{get\_generator} method.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
     \centering
     % Placeholder for Class Diagram
     % \hspace{-3cm}
@@ -594,20 +648,102 @@ the layer responsibble for trigering the Task is the Celery Beat, which schedule
 they work based on the linux cron system, which allows for scheduling tasks to run at specific times or intervals.
 
 
+\subsection{Deployment with Docker and Docker Compose}
 
+To orchestrate and run all the services in our architecture—Kafka, Zookeeper, Redis, Elasticsearch, Kibana, FastAPI, Celery workers, and the data generator—we use Docker and Docker Compose. Docker allows us to package each service into a container, ensuring consistency across development, testing, and production environments.
 
-\subsection{Deployment Diagram}
+\textbf{Service Ports and Networking:}
+\begin{itemize}
+    \item \textbf{Kafka} runs on port \texttt{9092} (for external connections) and \texttt{9093} (for internal container-to-container communication). These ports are mapped from the container to the host, allowing both local development tools and other containers to communicate with Kafka.
+    \item \textbf{Zookeeper} (required by Kafka) listens on port \texttt{2181}.
+    \item \textbf{Redis} runs on port \texttt{6379}. We use the \texttt{redis:7.2-alpine} image, which is based on Alpine Linux. Alpine images are chosen for their minimal size and security, reducing the attack surface and speeding up container startup.
+    \item \textbf{Elasticsearch} is exposed on port \texttt{9200} for REST API access.
+    \item \textbf{Kibana} is available on port \texttt{5601} for web-based visualization.
+\end{itemize}
 
+All containers are connected to a \textbf{shared Docker network} created by Docker Compose. This enables DNS-based service discovery: containers can communicate using service names (e.g., \texttt{kafka}, \texttt{redis}, \texttt{es01}) instead of IP addresses. For example, the FastAPI application can connect to Redis simply by using the hostname \texttt{redis}.
+
+\textbf{Key benefits of Docker Compose in our system:}
+\begin{itemize}
+    \item \textbf{Service Isolation}: Each component (Kafka, Redis, Elasticsearch, etc.) runs in its own container, avoiding dependency conflicts.
+    \item \textbf{Networking}: Docker Compose creates a dedicated network so containers can communicate using service names, simplifying service discovery and integration.
+    \item \textbf{Dependency Management}: The \texttt{depends\_on} directive ensures services start in the correct order (e.g., Kafka waits for Zookeeper).
+    \item \textbf{Port Mapping}: Exposes necessary ports for host access (e.g., 9092 for Kafka, 6379 for Redis, 9200 for Elasticsearch).
+    \item \textbf{Scalability}: Easily scale services (like Celery workers) by adjusting the \texttt{docker-compose.yml} file.
+    \item \textbf{Reproducibility}: The entire stack can be started or stopped with a single command (\texttt{docker-compose up/down}), ensuring consistent environments for all developers and deployments.
+\end{itemize}
 \begin{figure}[H]
     \centering
-    % Placeholder for Deployment Diagram
-    % \includegraphics[width=\textwidth]{figures/deployment_diagram.png}
-    \fbox{\parbox[c][8cm][c]{\textwidth}{\centering Placeholder for Deployment Diagram: Docker containers for Kafka, Zookeeper, Elasticsearch, Redis, FastAPI App, Celery Workers, Data Generator}}
-    \caption{Deployment Diagram}
-    \label{fig:deployment_diagram}
+    \includegraphics[width=\textwidth]{figures/sad/image.png}
+    \caption{Overall Docker Compose Architecture}
+    \label{fig:docker_compose_architecture}
 \end{figure}
+\textbf{Example docker-compose.yml excerpt:}
+\begin{minted}[fontsize=\footnotesize, frame=lines, label=docker-compose.yml]{yaml}
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
 
-This diagram would illustrate how the different components (Kafka, Elasticsearch, FastAPI app, Celery workers, Redis, etc.) are deployed, likely as Docker containers, and how they network with each other.
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  elasticsearch:
+    image: elasticsearch:9.0.1
+    container_name: es01
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: kibana:9.0.1
+    container_name: kib01
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es01:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+  # Additional services (FastAPI, Celery, Data Generator) would be defined similarly
+\end{minted}
+
+\textbf{How it all fits together:}
+\begin{itemize}
+    \item The \texttt{zookeeper} and \texttt{kafka} containers provide the event streaming backbone.
+    \item \texttt{redis} is used for fast in-memory storage and as a Celery broker.
+    \item \texttt{elasticsearch} and \texttt{kibana} handle anomaly storage and visualization.
+    \item Application containers (FastAPI, Celery workers, Data Generator) connect to these core services via the Docker network using DNS-based service names.
+\end{itemize}
+
+This approach ensures that all services are reproducibly deployed, easily managed, and networked together, forming a robust foundation for our distributed financial data surveillance system.
 
 \subsection{Other UML Diagrams}
 This section provides placeholders for additional UML diagrams that can further illustrate the system's design. These diagrams will be added as the project evolves and specific design aspects require more detailed visualization.
