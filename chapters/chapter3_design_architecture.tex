@@ -452,7 +452,7 @@ The Elasticsearch index mapping defines the data types and properties of the ano
 \end{itemize}
 
 
-The following diagram will show teh data flow for all the detail compemnts described above, including the data generator, Kafka producer, consumer script, Celery workers, Redis for sliding window storage, and Elasticsearch for anomaly indexing.
+The following diagram will show the data flow for all the Components described above, including the data generator, Kafka producer, consumer script, Celery workers, Redis for sliding window storage, and Elasticsearch for anomaly indexing.
 
 
 \begin{sidewaysfigure}
@@ -540,7 +540,7 @@ This next sequence diagram illustrates the interaction between the FastAPI appli
 
 This module generates reports in multiple formats (PDF , CSV.....)
 \begin{itemize}
-    \item \textbf{Libraries}: e.g., `reportlab` or `WeasyPrint` for PDF, standard `csv` module for CSV.
+    \item \textbf{Libraries}: `reportlab` for PDF.
     \item \textbf{Content}: Reports include summaries of detected anomalies, statistics, and potentially charts.
     \item \textbf{Formatting}: The formatting of the report depends on the selected format. For example, PDF reports can include sophisticated formatting with tables , enhancing readability and visual appeal. 
 
@@ -614,16 +614,10 @@ When an anomaly is detected and confirmed, an alert message is published to a de
     \item \textbf{Docker}: Used for containerization, ensuring consistent development, testing, and deployment environments across different machines and simplifying the management of microservices.
 \end{itemize}
 
-\section{Design Diagrams}
-
-This section would typically include more detailed diagrams.
-
-\subsection{Sequence Diagram: Detection Flow}
+\section{Batch Report Generation and Deployment}
 
 
-This diagram would illustrate the sequence of interactions: Data Generator $\rightarrow$ Kafka (price topic) $\rightarrow$ Celery Worker/Kafka Consumer $\rightarrow$ Redis (sliding window) $\rightarrow$ Z-Score Calculation $\rightarrow$ Elasticsearch (if anomaly) $\rightarrow$ Kafka (alert topic).
 
-\break
 
 
 
