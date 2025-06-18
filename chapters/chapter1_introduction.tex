@@ -26,26 +26,33 @@ Financial markets generate enormous amounts of data every second, with price upd
 \end{itemize}
 
 The challenge lies in building a system that can address all these requirements simultaneously while remaining cost-effective and maintainable.
+\section{Requirements}
 
-\section{Project Objectives}
+To address the challenges outlined in the problem statement, the proposed system must satisfy a set of functional and non-functional requirements.
 
-\subsection{Main Objective}
+\subsection{Functional Requirements}
+Functional requirements define the specific behaviors and capabilities of the system. For this financial surveillance system, these include:
+\begin{itemize}
+    \item \textbf{Data Ingestion}: The system must be able to ingest real-time financial data from various sources, including market data feeds and trading platforms.
+    \item \textbf{Anomaly Detection}: The system must implement algorithms to detect various types of anomalies, such as unusual price movements, abnormal trading volumes, and deviations from historical patterns.
+    \item \textbf{Alerting Mechanism}: Upon detection of an anomaly, the system must generate and deliver timely alerts to designated users or systems through multiple channels (e.g., email, SMS, dashboard notifications).
+    \item \textbf{Data Storage and Retrieval}: The system must store historical financial data and detected anomalies for auditing, reporting, and further analysis. It should provide efficient mechanisms for data retrieval.
+    \item \textbf{User Interface}: A user-friendly interface should be provided for system configuration, monitoring of financial instruments, viewing alerts, and generating reports.
+    \item \textbf{Reporting}: The system should be capable of generating customizable reports summarizing detected anomalies, system performance, and market trends.
+\end{itemize}
 
-The primary objective of this project is to develop a comprehensive real-time financial data surveillance system capable of detecting price anomalies as they occur and providing immediate alerts to relevant stakeholders.
+\subsection{Non-Functional Requirements}
+Non-functional requirements define the quality attributes of the system. Key non-functional requirements for this project include:
+\begin{itemize}
+    \item \textbf{Performance}: The system must process data and detect anomalies with low latency, typically within sub-second timeframes, to be effective in real-time markets.
+    \item \textbf{Scalability}: The system architecture must be scalable to handle increasing volumes of data, a growing number of monitored financial instruments, and an expanding user base without degradation in performance.
+    \item \textbf{Reliability and Availability}: The system must be highly reliable and available, minimizing downtime to ensure continuous market surveillance. This includes fault tolerance and data redundancy.
+    \item \textbf{Accuracy}: The anomaly detection algorithms must achieve a high level of accuracy, minimizing both false positives (incorrectly identifying normal behavior as anomalous) and false negatives (failing to detect actual anomalies).
+    \item \textbf{Security}: The system must ensure the confidentiality, integrity, and availability of sensitive financial data. This includes secure data transmission, storage, and access controls.
+    \item \textbf{Maintainability}: The system should be designed in a modular and well-documented manner to facilitate easy maintenance, updates, and future enhancements.
+    \item \textbf{Usability}: The user interface and alerting system should be intuitive and easy to use, enabling operators to quickly understand and respond to detected anomalies.
+\end{itemize}
 
-\subsection{Secondary Objectives}
-
-\begin{enumerate}
-    \item \textbf{Implement Statistical Anomaly Detection}: Develop and implement robust statistical algorithms, particularly Z-score analysis, to identify price movements that deviate significantly from historical patterns.
-    
-    \item \textbf{Create an Automated Alert System}: Build a multi-channel alert system that can notify users through various means (email, SMS, dashboard notifications) when anomalies are detected.
-    
-    \item \textbf{Provide Analytical Reports}: Generate comprehensive reports in multiple formats (PDF, CSV) that summarize detected anomalies and provide insights for further analysis.
-    
-    \item \textbf{Ensure System Scalability}: Design the system architecture to handle increasing loads and support monitoring of additional financial instruments without significant performance degradation.
-    
-    \item \textbf{Maintain Data Integrity}: Implement robust data storage and retrieval mechanisms to ensure that all financial data and detected anomalies are preserved for historical analysis and regulatory compliance.
-\end{enumerate}
 
 \section{Adopted Methodology}
 
