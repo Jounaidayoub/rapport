@@ -1,0 +1,31 @@
+% Chapter 8: Conclusion
+\chapter{Conclusion}
+
+\section{Summary of Achievements}
+This report detailed the design and implementation of a real-time financial data surveillance system. Key achievements include:
+\begin{itemize}
+    \item Development of a scalable, event-driven architecture using microservices.
+    \item Integration of Apache Kafka for high-throughput data streaming.
+    \item Implementation of a robust anomaly detection mechanism using Celery and Redis.
+    \item Utilization of Elasticsearch for efficient storage and retrieval of anomaly data.
+    \item Creation of a FastAPI-based API for querying and reporting.
+    \item Containerization of all services using Docker and Docker Compose for simplified deployment.
+\end{itemize}
+The system successfully demonstrates the capability to ingest, process, and analyze financial data in real-time, detecting anomalies and providing actionable insights.
+
+\section{Lessons Learned and Future Perspectives}
+
+This project provided invaluable experience in designing and implementing complex distributed systems, significantly broadening my understanding of modern backend architectures beyond traditional monolithic or CRUD-based web applications.
+
+\subsection{Scalability and Complexity of Distributed Systems}
+Working with microservices and distributed systems highlighted their inherent scalability and independence. Each service can be developed, deployed, and scaled independently, which is crucial for handling varying loads in a financial environment. However, this flexibility comes with increased configuration complexity, especially concerning inter-service communication, data consistency, and operational overhead. I learned that while distributed systems offer immense power for horizontal scaling and resilience, careful design and robust monitoring are essential to manage their complexity effectively. The trade-off between simplicity and scalability became very apparent.
+
+\subsection{Exploring New Technologies}
+The project was an excellent opportunity to dive deep into several powerful technologies:
+\begin{itemize}
+    \item \textbf{Apache Kafka}: Before this project, I had never heard of Kafka. Discovering it and seeing how fast, resilient, and performant it is was eye-opening. I learned how large companies leverage Kafka for real-time data streaming at scale. Curious about its impressive speed, I explored some of its underlying features, such as its custom network protocol, sequential disk writes, and the zero-copy principle using the \texttt{sendfile} syscall. These technical choices explain why Kafka is so efficient and widely adopted.
+    \item \textbf{API/Worker Pattern (Celery \& Redis)}: Implementing the asynchronous task processing with Celery and Redis demonstrated how to offload heavy computations from the main API thread and free our system from long runnting tasks and easyly scale based on requirements, improving responsiveness and overall system performance. This pattern is fundamental for building responsive and scalable backend services.
+    \item \textbf{Elasticsearch}: Exploring Elasticsearch revealed its power as a search and analytics engine for time-series data. Its near real-time indexing and powerful query capabilities are a game-changer for applications requiring fast data retrieval and aggregation, far beyond what traditional relational databases can offer for such use cases.
+    \item \textbf{Docker \& Containerization}: Although Docker is widely discussed in the tech community, I had never used it before this project. This was a valuable opportunity to learn how Docker simplifies the setup of separate containers and services, each with its own dependencies, without worrying about complex environment conflicts. I realized that Docker's benefits extend far beyond this specific project, making it a powerful tool for reproducible development and deployment in many contexts.
+\end{itemize}
+This hands-on experience with these technologies has opened my eyes to new fields in backend development, particularly in data engineering, real-time analytics, and event-driven architectures,  It underscored the importance of choosing the right tool for the right job in building high-performance, resilient systems.
