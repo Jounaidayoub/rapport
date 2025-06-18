@@ -17,9 +17,7 @@ Financial markets generate enormous amounts of data every second, with price upd
     \item \textbf{Real-time Processing}: The need to process and analyze financial data in real-time to detect anomalies as they occur, rather than discovering them hours or days later.
     
     \item \textbf{Scalability}: The ability to handle increasing volumes of data as more financial instruments are monitored and as market activity grows.
-    
-    \item \textbf{Accuracy}: Minimizing false positives while ensuring that genuine anomalies are detected promptly and reliably.
-    
+        
     \item \textbf{Historical Analysis}: Maintaining comprehensive historical records for post-mortem analysis, regulatory compliance, and pattern recognition.
     
     \item \textbf{Alert Management}: Providing timely and actionable alerts to the appropriate stakeholders when anomalies are detected.
@@ -35,9 +33,9 @@ Functional requirements define the specific behaviors and capabilities of the sy
 \begin{itemize}
     \item \textbf{Data Ingestion}: The system must be able to ingest real-time financial data from various sources, including market data feeds and trading platforms.
     \item \textbf{Anomaly Detection}: The system must implement algorithms to detect various types of anomalies, such as unusual price movements, abnormal trading volumes, and deviations from historical patterns.
-    \item \textbf{Alerting Mechanism}: Upon detection of an anomaly, the system must generate and deliver timely alerts to designated users or systems through multiple channels (e.g., email, SMS, dashboard notifications).
+    \item \textbf{Alerting Mechanism}: Upon detection of an anomaly, the system must generate and deliver timely alerts to designated users or systems through multiple channels (e.g., via Kafka topics, Email, ...).
     \item \textbf{Data Storage and Retrieval}: The system must store historical financial data and detected anomalies for auditing, reporting, and further analysis. It should provide efficient mechanisms for data retrieval.
-    \item \textbf{User Interface}: A user-friendly interface should be provided for system configuration, monitoring of financial instruments, viewing alerts, and generating reports.
+    \item \textbf{API Interface}: The system should provide a well-documented API interface to allow integration with external systems for configuration, monitoring, alert retrieval, and report generation.
     \item \textbf{Reporting}: The system should be capable of generating customizable reports summarizing detected anomalies, system performance, and market trends.
 \end{itemize}
 
@@ -50,55 +48,39 @@ Non-functional requirements define the quality attributes of the system. Key non
     \item \textbf{Accuracy}: The anomaly detection algorithms must achieve a high level of accuracy, minimizing both false positives (incorrectly identifying normal behavior as anomalous) and false negatives (failing to detect actual anomalies).
     \item \textbf{Security}: The system must ensure the confidentiality, integrity, and availability of sensitive financial data. This includes secure data transmission, storage, and access controls.
     \item \textbf{Maintainability}: The system should be designed in a modular and well-documented manner to facilitate easy maintenance, updates, and future enhancements.
-    \item \textbf{Usability}: The user interface and alerting system should be intuitive and easy to use, enabling operators to quickly understand and respond to detected anomalies.
 \end{itemize}
 
 
-\section{Adopted Methodology}
+% \section{Adopted Methodology}
 
-The development of this financial surveillance system follows a structured approach that emphasizes iterative development, open-source technologies, and comprehensive testing:
+% The development of this financial surveillance system follows a structured approach that emphasizes iterative development, open-source technologies, and comprehensive testing:
 
-\subsection{Agile Development Approach}
+% \subsection{Open-Source Technology Preference}
 
-The project adopts an agile methodology with short development cycles, allowing for rapid prototyping and continuous improvement. This approach enables quick adaptation to changing requirements and facilitates early detection of potential issues.
+% Priority is given to open-source technologies to ensure cost-effectiveness, community support, and avoid vendor lock-in. The selected technology stack includes:
+% \begin{itemize}
+%     \item Apache Kafka for real-time data streaming
+%     \item Elasticsearch for data storage and search
+%     \item FastAPI for RESTful API development
+%     \item Redis for caching and temporary data storage
+%     \item Celery for asynchronous task processing
+% \end{itemize}
 
-\subsection{Open-Source Technology Preference}
+% \subsection{Data-Driven Testing Strategy}
 
-Priority is given to open-source technologies to ensure cost-effectiveness, community support, and avoid vendor lock-in. The selected technology stack includes:
-\begin{itemize}
-    \item Apache Kafka for real-time data streaming
-    \item Elasticsearch for data storage and search
-    \item FastAPI for RESTful API development
-    \item Redis for caching and temporary data storage
-    \item Celery for asynchronous task processing
-\end{itemize}
+% The system is tested using both simulated and real financial data to ensure robustness and accuracy. Initial testing uses controlled, simulated datasets to validate core functionality, followed by testing with real market data to verify performance under actual conditions.
 
-\subsection{Data-Driven Testing Strategy}
+% \subsection{Microservices Architecture}
 
-The system is tested using both simulated and real financial data to ensure robustness and accuracy. Initial testing uses controlled, simulated datasets to validate core functionality, followed by testing with real market data to verify performance under actual conditions.
-
-\subsection{Microservices Architecture}
-
-The system is designed using a microservices architecture to ensure modularity, scalability, and maintainability. Each component has a specific responsibility and can be developed, tested, and deployed independently.
+% The system is designed using a microservices architecture to ensure modularity, scalability, and maintainability. Each component has a specific responsibility and can be developed, tested, and deployed independently.
 
 \section{Report Structure}
 
-This report is organized into eight main chapters, each focusing on a specific aspect of the project:
-
+This report is organized into three main chapters, each focusing on a specific aspect of the project:
 \begin{itemize}
-    \item \textbf{Chapter 2} presents a comprehensive analysis of existing solutions and technologies in the financial surveillance domain, establishing the theoretical foundation for the project.
+    \item \textbf{Chapter 1} introduces the project, presenting the general context, problem statement, and requirements.
     
-    \item \textbf{Chapter 3} details the system design and architecture, explaining the rationale behind technology choices and architectural decisions.
+    \item \textbf{Chapter 2} describes the actual work, including the system design, architectural choices, implementation details, and the decisions made throughout the project.
     
-    \item \textbf{Chapter 4} describes the implementation process, including key modules, coding practices, and technical challenges encountered during development.
-    
-    \item \textbf{Chapter 5} covers the testing and validation methodology, presenting results and performance metrics that demonstrate the system's effectiveness.
-    
-    \item \textbf{Chapter 6} explains the deployment strategy and operational considerations for running the system in production environments.
-    
-    \item \textbf{Chapter 7} provides a critical analysis of the results, discussing limitations, challenges, and future improvement opportunities.
-    
-    \item \textbf{Chapter 8} concludes the report with a summary of achievements, lessons learned, and perspectives for future development.
+    \item \textbf{Chapter 3} concludes the report, summarizing the main achievements, lessons learned, and providing perspectives for future development.
 \end{itemize}
-
-The appendices provide additional technical details, including source code excerpts, detailed test results, user guides, and comprehensive bibliography.

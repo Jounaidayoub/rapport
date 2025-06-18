@@ -272,7 +272,7 @@ Docker is a platform for developing, shipping, and running applications in light
 \subsubsection{Role in Our System}
 Docker is used to:
 \begin{itemize}
-    \item Containerize all core services (Kafka, Redis, Elasticsearch, FastAPI, Celery, etc.) for reproducible deployments.
+    \item Containerize all core services (Kafka, Redis, Elasticsearch, etc.) for reproducible deployments.
     \item Simplify orchestration and networking using Docker Compose.
     \item Enable easy scaling and management of microservices.
     \item Provide isolated, consistent environments for development and production.
@@ -527,7 +527,7 @@ This next sequence diagram illustrates the interaction between the FastAPI appli
     % \hspace{-3cm}
     % \includegraphics[width=0.8\textwidth]{figures/class_diagram_data_model.png}
     \includegraphics[width=1.2\textwidth,angle=90]{figures/api-1.png}
-    \caption{Simplified Class Diagram: Data Model}
+    \caption{Sequence Diagram for API Interactions}
     \label{fig:class_diagram_data_model}
 \end{figure}
 
@@ -647,10 +647,9 @@ this diagram illustrate how shecduled batch report generation works, showing the
 the layer responsibble for trigering the Task is the Celery Beat, which schedules the task to run at specific intervals (e.g., daily, weekly).
 they work based on the linux cron system, which allows for scheduling tasks to run at specific times or intervals.
 
-
 \subsection{Deployment with Docker and Docker Compose}
 
-To orchestrate and run all the services in our architecture—Kafka, Zookeeper, Redis, Elasticsearch, Kibana, FastAPI, Celery workers, and the data generator—we use Docker and Docker Compose. Docker allows us to package each service into a container, ensuring consistency across development, testing, and production environments.
+To orchestrate and run all the services in our architecture—Kafka, Zookeeper, Redis, Elasticsearch, and Kibana—we use Docker and Docker Compose. Docker allows us to package each service into a container, ensuring consistency across development, testing, and production environments.
 
 \textbf{Service Ports and Networking:}
 \begin{itemize}
@@ -661,92 +660,22 @@ To orchestrate and run all the services in our architecture—Kafka, Zookeeper, 
     \item \textbf{Kibana} is available on port \texttt{5601} for web-based visualization.
 \end{itemize}
 
-All containers are connected to a \textbf{shared Docker network} created by Docker Compose. This enables DNS-based service discovery: containers can communicate using service names (e.g., \texttt{kafka}, \texttt{redis}, \texttt{es01}) instead of IP addresses. For example, the FastAPI application can connect to Redis simply by using the hostname \texttt{redis}.
+All containers are connected to a \textbf{shared Docker network} created by Docker Compose. This enables DNS-based service discovery: containers can communicate using service names (e.g., \texttt{kafka}, \texttt{redis}, \texttt{es01}) instead of IP addresses.
 
-\textbf{Key benefits of Docker Compose in our system:}
-\begin{itemize}
-    \item \textbf{Service Isolation}: Each component (Kafka, Redis, Elasticsearch, etc.) runs in its own container, avoiding dependency conflicts.
-    \item \textbf{Networking}: Docker Compose creates a dedicated network so containers can communicate using service names, simplifying service discovery and integration.
-    \item \textbf{Dependency Management}: The \texttt{depends\_on} directive ensures services start in the correct order (e.g., Kafka waits for Zookeeper).
-    \item \textbf{Port Mapping}: Exposes necessary ports for host access (e.g., 9092 for Kafka, 6379 for Redis, 9200 for Elasticsearch).
-    \item \textbf{Scalability}: Easily scale services (like Celery workers) by adjusting the \texttt{docker-compose.yml} file.
-    \item \textbf{Reproducibility}: The entire stack can be started or stopped with a single command (\texttt{docker-compose up/down}), ensuring consistent environments for all developers and deployments.
-\end{itemize}
+Docker Compose brought significant advantages to our deployment process by allowing us to define, configure, and launch all required services with a single command. It simplified service orchestration, ensured consistent environments, and made it easy to manage dependencies and networking between containers.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figures/sad/image.png}
     \caption{Overall Docker Compose Architecture}
     \label{fig:docker_compose_architecture}
 \end{figure}
-\textbf{Example docker-compose.yml excerpt:}
-\begin{minted}[fontsize=\footnotesize, frame=lines, label=docker-compose.yml]{yaml}
-version: '3.8'
-services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.2
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
 
-  kafka:
-    image: confluentinc/cp-kafka:7.3.2
-    container_name: kafka
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "9093:9093"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-  redis:
-    image: redis:7.2-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-
-  elasticsearch:
-    image: elasticsearch:9.0.1
-    container_name: es01
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    ports:
-      - "9200:9200"
-
-  kibana:
-    image: kibana:9.0.1
-    container_name: kib01
-    environment:
-      - ELASTICSEARCH_HOSTS=http://es01:9200
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-
-  # Additional services (FastAPI, Celery, Data Generator) would be defined similarly
-\end{minted}
-
-\textbf{How it all fits together:}
-\begin{itemize}
-    \item The \texttt{zookeeper} and \texttt{kafka} containers provide the event streaming backbone.
-    \item \texttt{redis} is used for fast in-memory storage and as a Celery broker.
-    \item \texttt{elasticsearch} and \texttt{kibana} handle anomaly storage and visualization.
-    \item Application containers (FastAPI, Celery workers, Data Generator) connect to these core services via the Docker network using DNS-based service names.
-\end{itemize}
 
 This approach ensures that all services are reproducibly deployed, easily managed, and networked together, forming a robust foundation for our distributed financial data surveillance system.
 
-\subsection{Other UML Diagrams}
-This section provides placeholders for additional UML diagrams that can further illustrate the system's design. These diagrams will be added as the project evolves and specific design aspects require more detailed visualization.
+% \subsection{Other UML Diagrams}
+% This section provides placeholders for additional UML diagrams that can further illustrate the system's design. These diagrams will be added as the project evolves and specific design aspects require more detailed visualization.
 
 % \subsubsection{Use Case Diagram}
 % \begin{figure}[h]
