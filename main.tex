@@ -1,6 +1,8 @@
-\documentclass[12pt,a4paper]{report}
+\documentclass[12pt,a4paper,openany]{report}
+
 
 % Packages
+\usepackage{pdfpages}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french,english]{babel}
@@ -91,10 +93,11 @@
 \begin{document}
 
 
+\includepdf[pages=1]{cover.pdf}
 
+\chapter*{\centering Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
 \begin{center}
-    \chapter*{\centering Acknowledgements}
-    \addcontentsline{toc}{chapter}{Acknowledgements}
 First and foremost, I thank God — Alhamdulillah — for granting me the opportunity, strength, and perseverance to complete this project. His guidance has been my greatest support throughout this journey.
 
 \vspace{1em}
@@ -108,7 +111,9 @@ A special thanks goes to Mr Mehdi Benyoussef for their valuable guidance, suppor
 \vspace{1em}
 
 Finally, I am deeply grateful to my family and friends for their constant encouragement, patience, and unconditional support during this journey
+ 
 \end{center}
+
 \newpage
 
 % Include all chapters

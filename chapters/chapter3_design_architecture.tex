@@ -474,7 +474,6 @@ The following diagram will show the data flow for all the Components described a
 
 
 \subsection{API and Reporting Layer}
-
 \subsubsection{API Endpoints}
 The Stock Anomaly Detection API provides several endpoints to fetch anomaly data and generate reports.
 
@@ -512,12 +511,22 @@ The API offers robust report generation capabilities through its modern V1 endpo
 \end{itemize}
 
 The \verb|/v1/reports| endpoint significantly enhances user experience by providing a single, powerful interface for report generation. The asynchronous execution, particularly when coupled with email notifications, ensures that the system remains responsive and efficient, especially for large reports or during peak load times.
+\paragraph{Raw Data Export Endpoint}
+\begin{itemize}
+    \item \verb|GET /raw|: Exports raw Stock data in a specified format and sends it to the provided email address.
+    \begin{itemize}
+        \item Parameters: \verb|from| (start date), \verb|to| (end date), \verb|symbol| (stock symbol), \verb|format| (e.g., CSV, JSON), \verb|email| (recipient email address).
+        \item \textbf{Behavior}: This endpoint triggers an \textbf{asynchronous} task to fetch the raw Stock data from Elasticsearch, format it according to the specified format, and send it to the provided email address. Due to the potentially large size of raw data exports, using an asynchronous task ensures the API remains responsive.
+    \end{itemize}
+\end{itemize}
 
+
+
+The \verb|/raw| endpoint provides a convenient way to extract and share raw stock data for further analysis or integration with other systems. The asynchronous nature of this endpoint ensures that the API remains responsive, even when exporting large datasets.
 
 
 
 This next sequence diagram illustrates the interaction between the FastAPI application and the underlying data storage (Elasticsearch) and processing (Celery) for querying anomalies and generating reports.
-
 
 % \subsection{Sequence Diagram: Api }
 
